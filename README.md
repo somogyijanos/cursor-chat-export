@@ -39,7 +39,29 @@ Find, where the `state.vscdb` is located in your computer. The table below may h
 ./chat.py discover --search-text "matplotlib" "/Users/myuser/Library/Application Support/Cursor/User/workspaceStorage"
 ```
 
+### Auto-detect and Discover Chats
+```sh
+./chat.py discover --auto --search-text "matplotlib"
+```
+
+This command will automatically detect the appropriate directory for your OS and search for chats containing the word "matplotlib".
+
 ### Export Chats of a Workspace
 ```sh
 ./chat.py export --output-dir output "/Users/myuser/Library/Application Support/Cursor/User/workspaceStorage/b989572f2e2186b48b808da2da437416/state.vscdb"
 ```
+
+### Auto-detect and Export Latest Workspace Chats
+```sh
+./chat.py export --output-dir output --auto --latest
+```
+
+The `--auto` flag automatically detects the Cursor workspace storage directory based on your operating system. The `--latest` flag selects the most recently modified workspace folder.
+
+You can use these flags together to quickly export chats from your latest workspace without specifying the full path:
+
+```sh
+./chat.py export --output-dir output --auto --latest
+```
+
+This command will automatically detect the appropriate directory for your OS, find the latest workspace, and export the chats to the specified output directory.
