@@ -1,3 +1,4 @@
+import os
 import sqlite3
 import yaml
 from typing import Any
@@ -12,6 +13,7 @@ class VSCDBQuery:
             db_path (str): The path to the SQLite database file.
         """
         self.db_path = db_path
+        logger.info(f"Database path: {os.path.join(os.path.basename(os.path.dirname(self.db_path)), os.path.basename(self.db_path))}")
 
     def query_to_json(self, query: str) -> list[Any] | dict[str, str]:
         """
