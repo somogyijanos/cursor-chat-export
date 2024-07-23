@@ -1,0 +1,1 @@
+aichat_query: "SELECT value FROM ItemTable WHERE [key] IN ('workbench.panel.aichat.view.aichat.chatdata');"
