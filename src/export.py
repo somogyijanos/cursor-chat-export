@@ -21,7 +21,7 @@ class ChatFormatter(ABC):
         pass
 
 class MarkdownChatFormatter(ChatFormatter):
-    def format(self, chat_data: dict[str, Any], image_dir: str = 'images') -> str:
+    def format(self, chat_data: dict[str, Any], image_dir: str | None = 'images') -> str:
         """Format the chat data into Markdown format.
 
         Args:
@@ -32,30 +32,35 @@ class MarkdownChatFormatter(ChatFormatter):
             str: The formatted chat data in Markdown.
         """
         try:
-            bubbles = chat_data['tabs'][0]['bubbles']
-            formatted_chat = ["# Chat Transcript\n"]
-            os.makedirs(image_dir, exist_ok=True)
+            formatted_chats = []
+            for tab_index, tab in enumerate(chat_data['tabs']):
+                bubbles = tab['bubbles']
+                formatted_chat = [f"# Chat Transcript - Tab {tab_index + 1}\n"]
+                tab_image_dir = os.path.join(image_dir, f"tab_{tab_index + 1}") if image_dir else None
+                if tab_image_dir is not None:
+                    os.makedirs(tab_image_dir, exist_ok=True)
 
-            for bubble in bubbles:
-                if bubble['type'] == 'user':
-                    formatted_chat.append(f"## User:\n\n{bubble['delegate']['a']}\n")
-                    if 'image' in bubble:
-                        image_path = bubble['image']['path']
-                        image_filename = os.path.basename(image_path)
-                        new_image_path = os.path.join(image_dir, image_filename)
-                        shutil.copy(image_path, new_image_path)
-                        formatted_chat.append(f"![User Image]({new_image_path})\n")
-                elif bubble['type'] == 'ai':
-                    raw_text = re.sub(r'```python:[^\n]+', '```python', bubble['rawText'])
-                    formatted_chat.append(f"## AI:\n\n{raw_text}\n")
+                for bubble in bubbles:
+                    if bubble['type'] == 'user':
+                        formatted_chat.append(f"## User:\n\n{bubble['delegate']['a']}\n")
+                        if 'image' in bubble and tab_image_dir is not None:
+                            image_path = bubble['image']['path']
+                            image_filename = os.path.basename(image_path)
+                            new_image_path = os.path.join(tab_image_dir, image_filename)
+                            shutil.copy(image_path, new_image_path)
+                            formatted_chat.append(f"![User Image]({new_image_path})\n")
+                    elif bubble['type'] == 'ai':
+                        raw_text = re.sub(r'```python:[^\n]+', '```python', bubble['rawText'])
+                        formatted_chat.append(f"## AI:\n\n{raw_text}\n")
 
-            return "\n".join(formatted_chat)
+                formatted_chats.append("\n".join(formatted_chat))
+            return formatted_chats
         except KeyError as e:
             logger.error(f"KeyError: {e}")
-            return f"Error: Missing key {e}"
+            return [f"Error: Missing key {e}"]
         except Exception as e:
             logger.error(f"Unexpected error: {e}")
-            return f"Error: {e}"
+            return [f"Error: {e}"]
 
 class FileSaver(ABC):
     @abstractmethod
@@ -96,17 +101,20 @@ class ChatExporter:
         self.formatter = formatter
         self.saver = saver
 
-    def export(self, chat_data: dict[str, Any], file_path: str, image_dir: str) -> None:
+    def export(self, chat_data: dict[str, Any], output_dir: str, image_dir: str) -> None:
         """Export the chat data by formatting and saving it.
 
         Args:
             chat_data (dict[str, Any]): The chat data to export.
-            file_path (str): The path to the file where the formatted data will be saved.
+            output_dir (str): The directory where the formatted data will be saved.
             image_dir (str): The directory where images will be saved.
         """
         try:
-            formatted_data = self.formatter.format(chat_data, image_dir)
-            self.saver.save(formatted_data, file_path)
+            os.makedirs(output_dir, exist_ok=True)
+            formatted_chats = self.formatter.format(chat_data, image_dir)
+            for tab_index, formatted_data in enumerate(formatted_chats):
+                tab_file_path = os.path.join(output_dir, f"tab_{tab_index + 1}.md")
+                self.saver.save(formatted_data, tab_file_path)
         except Exception as e:
             logger.error(f"Failed to export chat data: {e}")
 
@@ -118,4 +126,5 @@ class ChatExporter:
 # formatter = MarkdownChatFormatter()
 # saver = MarkdownFileSaver()
 # exporter = ChatExporter(formatter, saver)
-# exporter.export(chat_data, 'chat.md')
+# exporter.export(chat_data, 'output_folder', 'images')
+

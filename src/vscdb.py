@@ -26,7 +26,7 @@ class VSCDBQuery:
             list[Any] | dict[str, str]: The query results as a list, or an error message as a dictionary.
         """
         try:
-            logger.info(f"Executing query: {query}")
+            logger.debug(f"Executing query: {query}")
             conn = sqlite3.connect(f'file:{self.db_path}?mode=ro', uri=True)
             cursor = conn.cursor()
             cursor.execute(query)
@@ -35,7 +35,7 @@ class VSCDBQuery:
 
             # Assuming the query returns rows with a single column
             result = [row[0] for row in rows]
-            logger.info(f"Query executed successfully, fetched {len(result)} rows.")
+            logger.success(f"Query executed successfully, fetched {len(result)} rows.")
             return result
         except sqlite3.Error as e:
             logger.error(f"SQLite error: {e}")
@@ -55,7 +55,7 @@ class VSCDBQuery:
             with open('config.yml', 'r') as config_file:
                 config = yaml.safe_load(config_file)
             query = config['aichat_query']
-            logger.info("Loaded AI chat query from config.yaml")
+            logger.debug("Loaded AI chat query from config.yaml")
             return self.query_to_json(query)
         except FileNotFoundError as e:
             logger.error(f"Config file not found: {e}")
@@ -71,3 +71,5 @@ class VSCDBQuery:
 # db_query = VSCDBQuery('/Users/somogyijanos/Library/Application Support/Cursor/User/workspaceStorage/b989572f2e2186b48b808da2da437416/state.vscdb')
 # json_result = db_query.query_to_json("SELECT value FROM ItemTable WHERE [key] IN ('workbench.panel.aichat.view.aichat.chatdata');")
 # print(json_result)
+
+
