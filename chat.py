@@ -80,7 +80,7 @@ def export(
         logger.error(error_message)
         raise typer.Exit(code=1)
 
-def get_auto_db_path(latest: bool) -> str:
+def get_cursor_workspace_path() -> Path:
     system = platform.system()
     home = Path.home()
 
@@ -95,6 +95,11 @@ def get_auto_db_path(latest: bool) -> str:
 
     if not base_path.exists():
         raise FileNotFoundError(f"Cursor workspace storage directory not found: {base_path}")
+
+    return base_path
+
+def get_auto_db_path(latest: bool) -> str:
+    base_path = get_cursor_workspace_path()
 
     if latest:
         workspace_folder = max(base_path.glob("*"), key=os.path.getmtime)
@@ -111,22 +116,7 @@ def get_auto_db_path(latest: bool) -> str:
     return str(db_path)
 
 def get_auto_base_path() -> str:
-    system = platform.system()
-    home = Path.home()
-
-    if system == "Windows":
-        base_path = Path(os.environ.get("APPDATA")) / "Cursor" / "User" / "workspaceStorage"
-    elif system == "Darwin":  # macOS
-        base_path = home / "Library" / "Application Support" / "Cursor" / "User" / "workspaceStorage"
-    elif system == "Linux":
-        base_path = home / ".config" / "Cursor" / "User" / "workspaceStorage"
-    else:
-        raise ValueError(f"Unsupported operating system: {system}")
-
-    if not base_path.exists():
-        raise FileNotFoundError(f"Cursor workspace storage directory not found: {base_path}")
-
-    return str(base_path)
+    return str(get_cursor_workspace_path())
 
 @app.command()
 def discover(
