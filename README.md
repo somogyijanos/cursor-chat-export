@@ -50,7 +50,7 @@ After installation, you can use the `cursor-chat-export` command from anywhere i
 
 ## Usage
 
-If you used the automated installation script, you can use the `cursor-chat-export` command instead of `./chat.py` in the following examples.
+If you used the automated installation script, you can use the `cursor-chat-export` command instead of `./chat.py` in the following examples. This is useful for quickly exporting the chat on your current project folder, by simply opening the terminal on it instead of having to copy cursor-chat-exporter every time.
 
 Find where the `state.vscdb` is located on your computer. The table below may help:
 
