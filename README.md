@@ -51,17 +51,26 @@ This command will automatically detect the appropriate directory for your OS and
 ./chat.py export --output-dir output "/Users/myuser/Library/Application Support/Cursor/User/workspaceStorage/b989572f2e2186b48b808da2da437416/state.vscdb"
 ```
 
-### Auto-detect and Export Latest Workspace Chats
+### Auto-detect and Export Workspace Chats
 ```sh
-./chat.py export --output-dir output --auto "/Users/myuser/Library/Application Support/Cursor/User/workspaceStorage/b989572f2e2186b48b808da2da437416/state.vscdb"
+./chat.py export --output-dir output --auto
 ```
 
-The `--auto` flag automatically detects the Cursor workspace storage directory based on your operating system. The `--latest` flag selects the most recently modified workspace folder.
+The `--auto` flag automatically detects the Cursor workspace storage directory based on your operating system.
 
-You can use these flags together to quickly export chats from your latest workspace without specifying the full path:
+You can use additional flags to control which chats are exported:
+
+- `--latest`: Exports only the most recent tab from the latest workspace.
+- `--recent`: Exports all tabs from the most recently modified workspace folder.
+
+Examples:
 
 ```sh
+# Export the latest tab from the most recent workspace
 ./chat.py export --output-dir output --auto --latest
+
+# Export all tabs from the most recent workspace
+./chat.py export --output-dir output --auto --recent
 ```
 
-This command will automatically detect the appropriate directory for your OS, find the latest workspace, and export the chats to the specified output directory.
+These commands will automatically detect the appropriate directory for your OS, find the latest workspace, and export the chats to the specified output directory according to the chosen flag.

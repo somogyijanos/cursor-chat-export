@@ -24,13 +24,14 @@ def export(
     db_path: str = typer.Argument(None, help="The path to the SQLite database file."),
     output_dir: str = typer.Option(None, help="The directory where the output markdown files will be saved. If not provided, prints to command line."),
     auto: bool = typer.Option(False, "--auto", help="Automatically detect the Cursor workspace storage directory based on the OS."),
-    latest: bool = typer.Option(False, "--latest", help="Use the latest (most recently modified) workspace folder.")
+    latest: bool = typer.Option(False, "--latest", help="Use the latest tab from the most recently modified workspace folder."),
+    recent: bool = typer.Option(False, "--recent", help="Use all tabs from the most recently modified workspace folder.")
 ):
     """
     Export chat data from the database to markdown files or print it to the command line.
     """
-    if auto:
-        db_path = get_auto_db_path(latest)
+    if auto or latest or recent:
+        db_path, use_latest_tab = get_auto_db_path(latest, recent)
 
     if not db_path:
         typer.echo("Error: Please provide a database path or use the --auto flag.")
@@ -50,6 +51,11 @@ def export(
 
         # Convert the chat data from JSON string to dictionary
         chat_data_dict = json.loads(chat_data[0])
+
+        if use_latest_tab:
+            # Get the latest tab by timestamp
+            latest_tab = max(chat_data_dict['tabs'], key=lambda tab: tab.get('timestamp', 0))
+            chat_data_dict['tabs'] = [latest_tab]
 
         # Format the chat data
         formatter = MarkdownChatFormatter()
@@ -98,22 +104,15 @@ def get_cursor_workspace_path() -> Path:
 
     return base_path
 
-def get_auto_db_path(latest: bool) -> str:
+def get_auto_db_path(latest: bool, recent: bool) -> tuple[str, bool]:
     base_path = get_cursor_workspace_path()
-
-    if latest:
-        workspace_folder = max(base_path.glob("*"), key=os.path.getmtime)
-    else:
-        workspace_folders = list(base_path.glob("*"))
-        if not workspace_folders:
-            raise FileNotFoundError(f"No workspace folders found in {base_path}")
-        workspace_folder = workspace_folders[0]
-
+    workspace_folder = max(base_path.glob("*"), key=os.path.getmtime)
     db_path = workspace_folder / "state.vscdb"
+    
     if not db_path.exists():
         raise FileNotFoundError(f"state.vscdb not found in {workspace_folder}")
 
-    return str(db_path)
+    return str(db_path), latest
 
 @app.command()
 def discover(
