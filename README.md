@@ -13,6 +13,8 @@ Also see [this](https://forum.cursor.com/t/guide-5-steps-exporting-chats-prompts
 
 ## Installation
 
+### Option 1: Manual Installation
+
 1. Clone the repository:
     ```sh
     git clone https://github.com/somogyijanos/cursor-chat-export.git
@@ -24,9 +26,33 @@ Also see [this](https://forum.cursor.com/t/guide-5-steps-exporting-chats-prompts
     pip install -r requirements.txt
     ```
 
+### Option 2: Automated Installation Script
+
+1. Clone the repository:
+    ```sh
+    git clone https://github.com/somogyijanos/cursor-chat-export.git
+    cd cursor-chat-export
+    ```
+
+2. Run the installation script:
+    ```sh
+    sudo ./install.sh
+    ```
+
+This script will:
+- Check if Python 3 is installed
+- Install the required dependencies
+- Create an installation directory at `/usr/lib/cursor-chat-export`
+- Copy the necessary files to the installation directory
+- Create a wrapper script at `/usr/bin/cursor-chat-export`
+
+After installation, you can use the `cursor-chat-export` command from anywhere in your terminal.
+
 ## Usage
 
-Find, where the `state.vscdb` is located in your computer. The table below may help:
+If you used the automated installation script, you can use the `cursor-chat-export` command instead of `./chat.py` in the following examples.
+
+Find where the `state.vscdb` is located on your computer. The table below may help:
 
 | OS               | Path                                                      |
 |------------------|-----------------------------------------------------------|
@@ -36,24 +62,24 @@ Find, where the `state.vscdb` is located in your computer. The table below may h
 
 ### Discover Chats of all Workspaces
 ```sh
-./chat.py discover --search-text "matplotlib" "/Users/myuser/Library/Application Support/Cursor/User/workspaceStorage"
+cursor-chat-export discover --search-text "matplotlib" "/Users/myuser/Library/Application Support/Cursor/User/workspaceStorage"
 ```
 
 ### Auto-detect and Discover Chats
 ```sh
-./chat.py discover --auto --search-text "matplotlib"
+cursor-chat-export discover --auto --search-text "matplotlib"
 ```
 
 This command will automatically detect the appropriate directory for your OS and search for chats containing the word "matplotlib".
 
 ### Export Chats of a Workspace
 ```sh
-./chat.py export --output-dir output "/Users/myuser/Library/Application Support/Cursor/User/workspaceStorage/b989572f2e2186b48b808da2da437416/state.vscdb"
+cursor-chat-export export --output-dir output "/Users/myuser/Library/Application Support/Cursor/User/workspaceStorage/b989572f2e2186b48b808da2da437416/state.vscdb"
 ```
 
 ### Auto-detect and Export Workspace Chats
 ```sh
-./chat.py export --output-dir output --auto
+cursor-chat-export export --output-dir output --auto
 ```
 
 The `--auto` flag automatically detects the Cursor workspace storage directory based on your operating system.
@@ -67,10 +93,10 @@ Examples:
 
 ```sh
 # Export the latest tab from the most recent workspace
-./chat.py export --output-dir output --auto --latest
+cursor-chat-export export --output-dir output --auto --latest
 
 # Export all tabs from the most recent workspace
-./chat.py export --output-dir output --auto --recent
+cursor-chat-export export --output-dir output --auto --recent
 ```
 
 These commands will automatically detect the appropriate directory for your OS, find the latest workspace, and export the chats to the specified output directory according to the chosen flag.
