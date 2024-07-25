@@ -1,12 +1,12 @@
-commit QmQqC4FHzBSyyuHvfgVCdqwnqVWgxjoyzKutr3G1N5cDab
+commit QmSERVTxBBmptnSeCZsyAH6cm2TisWtGuBULhUQbzzaaqr
 Branch: main
 Signed-off by: danimesq.eth (0xDDfC2e10702d8A781727A34D83B3bb3CA94a3E91)
-Signature: c9f17e5a2498a84b2f4ff275d3a0a5e99d8c750ecf034ef363d1a27b27ad9aa132c2d7e95d7763f33d1b02a7f07efe2cc2bf89f24149aca8eb53c2b7d3b9b0d801
+Signature: 5c66ad171811b043dc680ec31fc9adc3ff09f40479e67925013846f2f53d45227e7c9305ff495c76b70b4c53ac49fbc9f1c088f8b945bf93fb3e6832c9f40e4600
 
 ------------------------------
 
-Commit CID if including git's SHA1: QmaXRfzGubGRKifn9jZtEKuyDRBwqPgxpprLEonSR2Up1W
-Commit CID if containing only file hashes: QmSYhLv56gzL4WyQmG37hEC24m5sDpXgg7aaCtJikr2ufe
+Commit CID if including git's SHA1: QmdwQ43c8sRyqxqviKTNSqJEatQZCgH5DjYHKD1UbPb7Tb
+Commit CID if containing only file hashes: QmdQQcbnY2mVtiSnsAjtm42DrDtXkUWc12VfXAgsDKj4v9
 
 ------------------------------
 
@@ -17,7 +17,7 @@ Remote URL: https://github.com/Floflis/cursor-chat-export.git
 
 ------------------------------
 
-chown -h 1000:1000 'README.md'
-chmod 0664 'README.md'
-/usr/bin/touch -hcmd "2024-07-25 12:30:12.8426761000 -0300" 'README.md'
-/usr/bin/touch -hcad "2024-07-25 12:30:35.7975401000 -0300" 'README.md'
+chown -h 1000:1000 'AIConversation.md'
+chmod 0664 'AIConversation.md'
+/usr/bin/touch -hcmd "2024-07-25 12:37:44.7661981000 -0300" 'AIConversation.md'
+/usr/bin/touch -hcad "2024-07-25 12:38:21.2736383000 -0300" 'AIConversation.md'
