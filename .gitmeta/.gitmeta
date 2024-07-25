@@ -1,0 +1,23 @@
+commit QmQqC4FHzBSyyuHvfgVCdqwnqVWgxjoyzKutr3G1N5cDab
+Branch: main
+Signed-off by: danimesq.eth (0xDDfC2e10702d8A781727A34D83B3bb3CA94a3E91)
+Signature: c9f17e5a2498a84b2f4ff275d3a0a5e99d8c750ecf034ef363d1a27b27ad9aa132c2d7e95d7763f33d1b02a7f07efe2cc2bf89f24149aca8eb53c2b7d3b9b0d801
+
+------------------------------
+
+Commit CID if including git's SHA1: QmaXRfzGubGRKifn9jZtEKuyDRBwqPgxpprLEonSR2Up1W
+Commit CID if containing only file hashes: QmSYhLv56gzL4WyQmG37hEC24m5sDpXgg7aaCtJikr2ufe
+
+------------------------------
+
+.gitmeta version: r8
+Local folder: /media/daniella/B/git/Floflis/Floflis/ZFrk/cursor-chat-export
+Remote Name: origin
+Remote URL: https://github.com/Floflis/cursor-chat-export.git
+
+------------------------------
+
+chown -h 1000:1000 'README.md'
+chmod 0664 'README.md'
+/usr/bin/touch -hcmd "2024-07-25 12:30:12.8426761000 -0300" 'README.md'
+/usr/bin/touch -hcad "2024-07-25 12:30:35.7975401000 -0300" 'README.md'

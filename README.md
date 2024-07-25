@@ -53,7 +53,7 @@ This command will automatically detect the appropriate directory for your OS and
 
 ### Auto-detect and Export Latest Workspace Chats
 ```sh
-./chat.py export --output-dir output --auto --latest
+./chat.py export --output-dir output --auto "/Users/myuser/Library/Application Support/Cursor/User/workspaceStorage/b989572f2e2186b48b808da2da437416/state.vscdb"
 ```
 
 The `--auto` flag automatically detects the Cursor workspace storage directory based on your operating system. The `--latest` flag selects the most recently modified workspace folder.
