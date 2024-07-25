@@ -37,7 +37,7 @@ def export(
         typer.echo("Error: Please provide a database path or use the --auto flag.")
         raise typer.Exit(code=1)
 
-    image_dir = os.path.join(output_dir, 'images') if output_dir else None
+    image_dir = None
 
     try:
         # Query the AI chat data from the database
@@ -57,6 +57,12 @@ def export(
             latest_tab = max(chat_data_dict['tabs'], key=lambda tab: tab.get('timestamp', 0))
             chat_data_dict['tabs'] = [latest_tab]
 
+        # Check if there are any images in the chat data
+        has_images = any('image' in bubble for tab in chat_data_dict['tabs'] for bubble in tab.get('bubbles', []))
+
+        if has_images and output_dir:
+            image_dir = os.path.join(output_dir, 'images')
+
         # Format the chat data
         formatter = MarkdownChatFormatter()
         formatted_chats = formatter.format(chat_data_dict, image_dir)
@@ -73,6 +79,10 @@ def export(
             for formatted_data in formatted_chats:
                 console.print(Markdown(formatted_data))
             logger.info("Chat data has been successfully printed to the command line")
+    except KeyError as e:
+        error_message = f"KeyError: {e}. The chat data structure is not as expected. Please check the database content."
+        logger.error(error_message)
+        raise typer.Exit(code=1)
     except json.JSONDecodeError as e:
         error_message = f"JSON decode error: {e}"
         logger.error(error_message)
