@@ -1,0 +1,23 @@
+commit QmReka1S4VGf2PBtVbew3P5VoUpaTTkc7TLmB6vR11GS7f
+Branch: pr-bininstaller
+Signed-off by: danimesq.eth (0xDDfC2e10702d8A781727A34D83B3bb3CA94a3E91)
+Signature: 10fd6fe0805c80b7df2221fe9e9abaa2dcd6d9fe9f494639b72d5a561650c83e4f5c343bd9c88ffa2cd99226e8e0257ad6b5ba8f848b6e47eb644198d7bb31ed01
+
+------------------------------
+
+Commit CID if including git's SHA1: QmRpV21aN2ZLa8AXsjfGgTUeHTS3e61AUSzfV3WMyvbiFJ
+Commit CID if containing only file hashes: QmUeyyGLE7p3P84auqnGn2gXU1xoLNjaKwJzn8cbzLiJWu
+
+------------------------------
+
+.gitmeta version: r8
+Local folder: /media/daniella/B/git/Floflis/Floflis/ZFrk/cursor-chat-export
+Remote Name: origin
+Remote URL: https://github.com/Floflis/cursor-chat-export.git
+
+------------------------------
+
+chown -h 1000:1000 'draft/install.sh'
+chmod 0664 'draft/install.sh'
+/usr/bin/touch -hcmd "2024-07-24 20:36:17.4289256000 -0300" 'draft/install.sh'
+/usr/bin/touch -hcad "2024-07-25 13:13:30.5571137000 -0300" 'draft/install.sh'
