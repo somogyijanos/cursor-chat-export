@@ -1,12 +1,12 @@
-commit QmReka1S4VGf2PBtVbew3P5VoUpaTTkc7TLmB6vR11GS7f
+commit QmY4gSUbZzGSABLfzimdxPrwGj6KohmGEjQ3gpuitHChz5
 Branch: pr-bininstaller
 Signed-off by: danimesq.eth (0xDDfC2e10702d8A781727A34D83B3bb3CA94a3E91)
-Signature: 10fd6fe0805c80b7df2221fe9e9abaa2dcd6d9fe9f494639b72d5a561650c83e4f5c343bd9c88ffa2cd99226e8e0257ad6b5ba8f848b6e47eb644198d7bb31ed01
+Signature: 2d7d573bcadbfc43495aae7061248e5f784e86e0db9447917b9cf979a4edc275790e0f608d48649f89b98397c4044f0f11e6c0d7b3757fc41aeade0f6400681d00
 
 ------------------------------
 
-Commit CID if including git's SHA1: QmRpV21aN2ZLa8AXsjfGgTUeHTS3e61AUSzfV3WMyvbiFJ
-Commit CID if containing only file hashes: QmUeyyGLE7p3P84auqnGn2gXU1xoLNjaKwJzn8cbzLiJWu
+Commit CID if including git's SHA1: QmRrVivTJ8tiVcZVV4W4XAewK5Xawd6oipbF8TwMoSD3B9
+Commit CID if containing only file hashes: QmTWrGnCx8YvJKjdKrh7T6egMxyk8GviYh3N2qQ2s4McR7
 
 ------------------------------
 
@@ -17,7 +17,7 @@ Remote URL: https://github.com/Floflis/cursor-chat-export.git
 
 ------------------------------
 
-chown -h 1000:1000 'draft/install.sh'
-chmod 0664 'draft/install.sh'
-/usr/bin/touch -hcmd "2024-07-24 20:36:17.4289256000 -0300" 'draft/install.sh'
-/usr/bin/touch -hcad "2024-07-25 13:13:30.5571137000 -0300" 'draft/install.sh'
+chown -h 1000:1000 'AIConversation.md'
+chmod 0664 'AIConversation.md'
+/usr/bin/touch -hcmd "2024-07-25 13:27:47.4399116000 -0300" 'AIConversation.md'
+/usr/bin/touch -hcad "2024-07-25 13:28:35.7670222000 -0300" 'AIConversation.md'
