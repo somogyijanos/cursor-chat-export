@@ -115,9 +115,6 @@ def get_auto_db_path(latest: bool) -> str:
 
     return str(db_path)
 
-def get_auto_base_path() -> str:
-    return str(get_cursor_workspace_path())
-
 @app.command()
 def discover(
     directory: str = typer.Argument(None, help="The directory to search for state.vscdb files."),
@@ -129,7 +126,7 @@ def discover(
     Discover all state.vscdb files in a directory and its subdirectories, and print a few lines of dialogue.
     """
     if auto:
-        directory = get_auto_base_path()
+        directory = str(get_cursor_workspace_path())
     
     if not directory:
         typer.echo("Error: Please provide a directory or use the --auto flag.")
