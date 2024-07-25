@@ -1,4 +1,3 @@
-
 import re
 import shutil
 import os
@@ -50,10 +49,12 @@ class MarkdownChatFormatter(ChatFormatter):
                             shutil.copy(image_path, new_image_path)
                             formatted_chat.append(f"![User Image]({new_image_path})\n")
                     elif bubble['type'] == 'ai':
+                        model_type = bubble.get('modelType', 'Unknown')
                         raw_text = re.sub(r'```python:[^\n]+', '```python', bubble['rawText'])
-                        formatted_chat.append(f"## AI:\n\n{raw_text}\n")
+                        formatted_chat.append(f"## AI ({model_type}):\n\n{raw_text}\n")
 
                 formatted_chats.append("\n".join(formatted_chat))
+
             return formatted_chats
         except KeyError as e:
             logger.error(f"KeyError: {e}")
@@ -127,4 +128,3 @@ class ChatExporter:
 # saver = MarkdownFileSaver()
 # exporter = ChatExporter(formatter, saver)
 # exporter.export(chat_data, 'output_folder', 'images')
-
