@@ -62,15 +62,10 @@ Find where the `state.vscdb` is located on your computer. The table below may he
 
 ### Discover Chats of all Workspaces
 ```sh
-cursor-chat-export discover --search-text "matplotlib" "/Users/myuser/Library/Application Support/Cursor/User/workspaceStorage"
+cursor-chat-export discover --search-text "matplotlib"
 ```
 
-### Auto-detect and Discover Chats
-```sh
-cursor-chat-export discover --auto --search-text "matplotlib"
-```
-
-This command will automatically detect the appropriate directory for your OS and search for chats containing the word "matplotlib".
+If no directory is provided, the tool will automatically use the default Cursor workspace storage directory for your OS.
 
 ### Export Chats of a Workspace
 ```sh
@@ -79,24 +74,31 @@ cursor-chat-export export --output-dir output "/Users/myuser/Library/Application
 
 ### Auto-detect and Export Workspace Chats
 ```sh
-cursor-chat-export export --output-dir output --auto
+cursor-chat-export export --output-dir output
 ```
 
-The `--auto` flag automatically detects the Cursor workspace storage directory based on your operating system.
+If no database path is provided, the tool will automatically use the most recent workspace.
 
-You can use additional flags to control which chats are exported:
+You can use the `--latest-tab` flag to export only the most recent tab:
 
-- `--latest`: Exports only the most recent tab from the latest workspace.
-- `--recent`: Exports all tabs from the most recently modified workspace folder.
+```sh
+cursor-chat-export export --output-dir output --latest-tab
+```
 
 Examples:
 
 ```sh
-# Export the latest tab from the most recent workspace
-cursor-chat-export export --output-dir output --auto --latest
+# Export all tabs from a specific workspace
+cursor-chat-export export --output-dir output /path/to/state.vscdb
+
+# Export the latest tab from a specific workspace
+cursor-chat-export export --output-dir output --latest-tab /path/to/state.vscdb
 
 # Export all tabs from the most recent workspace
-cursor-chat-export export --output-dir output --auto --recent
+cursor-chat-export export --output-dir output
+
+# Export the latest tab from the most recent workspace
+cursor-chat-export export --output-dir output --latest-tab
 ```
 
-These commands will automatically detect the appropriate directory for your OS, find the latest workspace, and export the chats to the specified output directory according to the chosen flag.
+These commands will automatically detect the appropriate directory for your OS when needed, find the latest workspace if no path is provided, and export the chats to the specified output directory according to the chosen options.

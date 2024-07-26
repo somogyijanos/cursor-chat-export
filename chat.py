@@ -21,21 +21,15 @@ console = Console()
 
 @app.command()
 def export(
-    db_path: str = typer.Argument(None, help="The path to the SQLite database file."),
+    db_path: str = typer.Argument(None, help="The path to the SQLite database file. If not provided, the latest workspace will be used."),
     output_dir: str = typer.Option(None, help="The directory where the output markdown files will be saved. If not provided, prints to command line."),
-    auto: bool = typer.Option(False, "--auto", help="Automatically detect the Cursor workspace storage directory based on the OS."),
-    latest: bool = typer.Option(False, "--latest", help="Use the latest tab from the most recently modified workspace folder."),
-    recent: bool = typer.Option(False, "--recent", help="Use all tabs from the most recently modified workspace folder.")
+    latest_tab: bool = typer.Option(False, "--latest-tab", help="Export only the latest tab. If not set, all tabs will be exported.")
 ):
     """
     Export chat data from the database to markdown files or print it to the command line.
     """
-    if auto or latest or recent:
-        db_path, use_latest_tab = get_auto_db_path(latest, recent)
-
     if not db_path:
-        typer.echo("Error: Please provide a database path or use the --auto flag.")
-        raise typer.Exit(code=1)
+        db_path = get_latest_workspace_db_path()
 
     image_dir = None
 
@@ -52,7 +46,7 @@ def export(
         # Convert the chat data from JSON string to dictionary
         chat_data_dict = json.loads(chat_data[0])
 
-        if use_latest_tab:
+        if latest_tab:
             # Get the latest tab by timestamp
             latest_tab = max(chat_data_dict['tabs'], key=lambda tab: tab.get('timestamp', 0))
             chat_data_dict['tabs'] = [latest_tab]
@@ -114,7 +108,7 @@ def get_cursor_workspace_path() -> Path:
 
     return base_path
 
-def get_auto_db_path(latest: bool, recent: bool) -> tuple[str, bool]:
+def get_latest_workspace_db_path() -> str:
     base_path = get_cursor_workspace_path()
     workspace_folder = max(base_path.glob("*"), key=os.path.getmtime)
     db_path = workspace_folder / "state.vscdb"
@@ -122,25 +116,20 @@ def get_auto_db_path(latest: bool, recent: bool) -> tuple[str, bool]:
     if not db_path.exists():
         raise FileNotFoundError(f"state.vscdb not found in {workspace_folder}")
 
-    return str(db_path), latest
+    return str(db_path)
 
 @app.command()
 def discover(
-    directory: str = typer.Argument(None, help="The directory to search for state.vscdb files."),
+    directory: str = typer.Argument(None, help="The directory to search for state.vscdb files. If not provided, the default Cursor workspace storage directory will be used."),
     limit: int = typer.Option(None, help="The maximum number of state.vscdb files to process. Defaults to 10 if search_text is not provided, else -1."),
-    search_text: str = typer.Option(None, help="The text to search for in the chat history."),
-    auto: bool = typer.Option(False, "--auto", help="Automatically detect the Cursor workspace storage directory based on the OS.")
+    search_text: str = typer.Option(None, help="The text to search for in the chat history.")
 ):
     """
     Discover all state.vscdb files in a directory and its subdirectories, and print a few lines of dialogue.
     """
-    if auto:
+    if not directory:
         directory = str(get_cursor_workspace_path())
     
-    if not directory:
-        typer.echo("Error: Please provide a directory or use the --auto flag.")
-        raise typer.Exit(code=1)
-
     if limit is None:
         limit = -1 if search_text else 10
 
@@ -180,7 +169,6 @@ def discover(
                     for formatted_data in formatted_chats:
                         filtered_lines = [line for line in formatted_data.splitlines() if search_text.lower() in line.lower()]
                         if filtered_lines:
-                            # results.append((db_path, "[...]" + "  \n[...]  \n".join(filtered_lines[:10]) + "[...]"))
                             results.append((db_path, "\n".join(formatted_data.splitlines()[:10]) + "\n..."))
                     if not filtered_lines:
                         logger.debug(f"No chat entries containing '{search_text}' found in {db_path}")
