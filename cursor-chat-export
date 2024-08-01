@@ -1,3 +1,0 @@
-#!/bin/bash
-
-python3 /usr/lib/cursor-chat-export/chat.py "$@"
