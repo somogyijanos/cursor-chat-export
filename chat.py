@@ -11,19 +11,30 @@ from loguru import logger
 import json
 import platform
 from pathlib import Path
+import yaml
 
 logger.remove()
-logger.add(sys.stderr, level="INFO")
-
+logger.add(sys.stderr, level="DEBUG")
 
 app = typer.Typer()
 console = Console()
+
+# Add this new function to get the config file path
+def get_config_path(is_system_install: bool, provided_path: str) -> str:
+    if is_system_install:
+        return "/usr/lib/cursor-chat-export/config.yml"
+    elif provided_path != "config.yml":
+        return provided_path
+    else:
+        return "config.yml"
 
 @app.command()
 def export(
     db_path: str = typer.Argument(None, help="The path to the SQLite database file. If not provided, the latest workspace will be used."),
     output_dir: str = typer.Option(None, help="The directory where the output markdown files will be saved. If not provided, prints to command line."),
-    latest_tab: bool = typer.Option(False, "--latest-tab", help="Export only the latest tab. If not set, all tabs will be exported.")
+    latest_tab: bool = typer.Option(False, "--latest-tab", help="Export only the latest tab. If not set, all tabs will be exported."),
+    system_install: bool = typer.Option(False, "--system-install", help="Indicates if this is a system-wide installation."),
+    config_path: str = typer.Option(None, "--config-path", help="Path to the config.yml file.")
 ):
     """
     Export chat data from the database to markdown files or print it to the command line.
@@ -32,10 +43,16 @@ def export(
         db_path = get_latest_workspace_db_path()
 
     image_dir = None
+    # logger.debug(f"Command line args: {sys.argv}")  # Log all command line arguments to see what is being passed
+    # logger.debug(f"System install flag: {system_install}")
+    # logger.debug(f"Provided config path: {config_path}")
+
+    config_path = get_config_path(system_install, config_path)
+    # logger.debug(f"Final config path: {config_path}")
 
     try:
         # Query the AI chat data from the database
-        db_query = VSCDBQuery(db_path)
+        db_query = VSCDBQuery(db_path, config_path)
         chat_data = db_query.query_aichat_data()
 
         if "error" in chat_data:

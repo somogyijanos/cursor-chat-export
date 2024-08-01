@@ -20,14 +20,7 @@ install_dependencies() {
 create_install_dir() {
     sudo mkdir -p "$INSTALL_DIR"
     sudo cp -r chat.py src/ config.yml README.md "$INSTALL_DIR"
-}
-
-# Function to create the wrapper script
-create_wrapper_script() {
-    sudo tee "/usr/bin/$SCRIPT_NAME" > /dev/null << EOF
-#!/bin/bash
-python3 $INSTALL_DIR/chat.py "\$@"
-EOF
+    sudo cp cursor-chat-export "/usr/bin/$SCRIPT_NAME"
     sudo chmod +x "/usr/bin/$SCRIPT_NAME"
 }
 
@@ -36,7 +29,6 @@ main() {
     check_python
     install_dependencies
     create_install_dir
-    create_wrapper_script
     echo "cursor-chat-export has been successfully installed!"
 }
 
