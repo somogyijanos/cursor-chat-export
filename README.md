@@ -15,8 +15,8 @@ Also see [this](https://forum.cursor.com/t/guide-5-steps-exporting-chats-prompts
 
 1. Clone the repository:
     ```sh
-    git clone https://github.com/somogyijanos/python3 chat.py.git
-    cd python3 chat.py
+    git clone https://github.com/somogyijanos/cursor-chat-export.git
+    cd cursor-chat-export
     ```
 
 2. Install the required dependencies:
@@ -26,9 +26,7 @@ Also see [this](https://forum.cursor.com/t/guide-5-steps-exporting-chats-prompts
 
 ## Usage
 
-If you used the automated installation script, you can use the `python3 chat.py` command instead of `./chat.py` in the following examples. This is useful for quickly exporting the chat on your current project folder, by simply opening the terminal on it instead of having to copy python3 chat.pyer every time.
-
-Find where the `state.vscdb` is located on your computer. The table below may help:
+Find, where the `state.vscdb` is located in your computer. The table below may help:
 
 | OS               | Path                                                      |
 |------------------|-----------------------------------------------------------|
@@ -41,12 +39,12 @@ Find where the `state.vscdb` is located on your computer. The table below may he
 python3 chat.py discover --search-text "matplotlib"
 ```
 
-If no directory is provided, the tool will automatically use the default Cursor workspace storage directory for your OS.
-
 ### Export Chats of a Workspace
 ```sh
 python3 chat.py export --output-dir output "/Users/myuser/Library/Application Support/Cursor/User/workspaceStorage/b989572f2e2186b48b808da2da437416/state.vscdb"
 ```
+
+If no directory is provided, the tool will automatically use the default Cursor workspace storage directory for your OS.
 
 ### Auto-detect and Export Workspace Chats
 ```sh
@@ -65,10 +63,10 @@ Examples:
 
 ```sh
 # Export all tabs from a specific workspace
-python3 chat.py export --output-dir output /path/to/state.vscdb
+python3 chat.py export --output-dir output "/Users/myuser/Library/Application Support/Cursor/User/workspaceStorage/b989572f2e2186b48b808da2da437416/state.vscdb"
 
 # Export the latest tab from a specific workspace
-python3 chat.py export --output-dir output --latest-tab /path/to/state.vscdb
+python3 chat.py export --output-dir output --latest-tab "/Users/myuser/Library/Application Support/Cursor/User/workspaceStorage/b989572f2e2186b48b808da2da437416/state.vscdb"
 
 # Export all tabs from the most recent workspace
 python3 chat.py export --output-dir output
