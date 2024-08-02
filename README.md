@@ -39,39 +39,35 @@ Find, where the `state.vscdb` is located in your computer. The table below may h
 python3 chat.py discover --search-text "matplotlib"
 ```
 
-### Export Chats of a Workspace
+### Export all Chats of a specific Workspace
 ```sh
 python3 chat.py export --output-dir output "/Users/myuser/Library/Application Support/Cursor/User/workspaceStorage/b989572f2e2186b48b808da2da437416/state.vscdb"
 ```
 
 If no directory is provided, the tool will automatically use the default Cursor workspace storage directory for your OS.
 
+### Export the latest Tab from a specific Workspace
+```sh
+python3 chat.py export --output-dir output --latest-tab "/Users/myuser/Library/Application Support/Cursor/User/workspaceStorage/b989572f2e2186b48b808da2da437416/state.vscdb"
+```
+
 ### Auto-detect and Export Workspace Chats
+
+Examples:
+
+
+#### Export all tabs from the most recent workspace
 ```sh
 python3 chat.py export --output-dir output
 ```
 
 If no database path is provided, the tool will automatically use the most recent workspace.
 
+#### Export the latest tab from the most recent workspace
+
 You can use the `--latest-tab` flag to export only the most recent tab:
 
 ```sh
-python3 chat.py export --output-dir output --latest-tab
-```
-
-Examples:
-
-```sh
-# Export all tabs from a specific workspace
-python3 chat.py export --output-dir output "/Users/myuser/Library/Application Support/Cursor/User/workspaceStorage/b989572f2e2186b48b808da2da437416/state.vscdb"
-
-# Export the latest tab from a specific workspace
-python3 chat.py export --output-dir output --latest-tab "/Users/myuser/Library/Application Support/Cursor/User/workspaceStorage/b989572f2e2186b48b808da2da437416/state.vscdb"
-
-# Export all tabs from the most recent workspace
-python3 chat.py export --output-dir output
-
-# Export the latest tab from the most recent workspace
 python3 chat.py export --output-dir output --latest-tab
 ```
 
