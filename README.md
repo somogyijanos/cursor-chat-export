@@ -8,8 +8,8 @@ Also see [this](https://forum.cursor.com/t/guide-5-steps-exporting-chats-prompts
 
 ## Features
 
-- **Discover Chats**: Discover all `state.vscdb` files in a directory and print a few lines of dialogue so one can identify which is the workspace (chat) one is searching for. It's also possible to filter by text.
-- **Export Chats**: Export chats data for a certain workspace to Markdown files or print it to the command line.
+- **Discover Chats**: Discover all chats from all workspaces and print a few lines of dialogue so one can identify which is the workspace (or chat) one is searching for. It's also possible to filter by text.
+- **Export Chats**: Export chats for the most recent (or a specific) workspace to Markdown files or print it to the command line.
 
 ## Installation
 
@@ -26,20 +26,44 @@ Also see [this](https://forum.cursor.com/t/guide-5-steps-exporting-chats-prompts
 
 ## Usage
 
-Find, where the `state.vscdb` is located in your computer. The table below may help:
+First, find, where the `state.vscdb` files are located on your computer. Confirm that corresponding to your system, the right path is set in the [config.yml](./config.yml) file. Update it if not set correctly.
 
-| OS               | Path                                                      |
-|------------------|-----------------------------------------------------------|
-| Windows          | `%APPDATA%\Cursor\User\workspaceStorage`                  |
-| macOS            | `/Users/YOUR_USERNAME/Library/Application Support/Cursor/User/workspaceStorage` |
-| Linux            | `/home/YOUR_USERNAME/.config/Cursor/User/workspaceStorage` |
+Both the `discover` and `export` commands will work with this path by default, but you can also provide a custom path any time.
 
-### Discover Chats of all Workspaces
+---
+
+### Discover Chats
 ```sh
-./chat.py discover --search-text "matplotlib" "/Users/myuser/Library/Application Support/Cursor/User/workspaceStorage"
+# Help on usage
+./chat.py discover --help
+
+# Discover all chats from all workspaces
+./chat.py discover
+
+# Apply text filter
+./chat.py discover --search-text "matplotlib"
+
+# Discover all chats from all workspaces at a custom path
+./chat.py discover "/path/to/workspaces"
 ```
 
-### Export Chats of a Workspace
+---
+
+### Export Chats
+See `./chat.py export --help` for general help. Examples:
 ```sh
-./chat.py export --output-dir output "/Users/myuser/Library/Application Support/Cursor/User/workspaceStorage/b989572f2e2186b48b808da2da437416/state.vscdb"
+# Help on usage
+./chat.py export --help
+
+# Print all chats of the most recent workspace to the command line
+./chat.py export
+
+# Export all chats of the most recent workspace as Markdown
+./chat.py export --output-dir "/path/to/output"
+
+# Export only the latest chat of the most recent workspace
+./chat.py export --latest-tab --output-dir "/path/to/output"
+
+# Export all chats of a specifc workspace
+./chat.py export --output-dir "/path/to/output" "/path/to/workspaces/workspace-dir/state.vscdb"
 ```
