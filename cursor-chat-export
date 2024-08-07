@@ -1,0 +1,6 @@
+#!/bin/bash
+
+INSTALL_DIR="/usr/lib/cursor-chat-export"
+SCRIPT_NAME="cursor-chat-export"
+
+python3 $INSTALL_DIR/chat.py "$@" --system-install
