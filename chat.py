@@ -9,6 +9,7 @@ from rich.console import Console
 from rich.markdown import Markdown
 from loguru import logger
 import json
+import yaml
 import platform
 from pathlib import Path
 
@@ -91,21 +92,35 @@ def export(
         raise typer.Exit(code=1)
 
 def get_cursor_workspace_path() -> Path:
-    system = platform.system()
-    home = Path.home()
+    config_path = Path("config.yml")
+    logger.debug(f"Looking for configuration file at: {config_path}")
+    
+    if not config_path.exists():
+        error_message = f"Configuration file not found: {config_path}"
+        logger.error(error_message)
+        raise FileNotFoundError(error_message)
 
-    if system == "Windows":
-        base_path = Path(os.environ.get("APPDATA")) / "Cursor" / "User" / "workspaceStorage"
-    elif system == "Darwin":  # macOS
-        base_path = home / "Library" / "Application Support" / "Cursor" / "User" / "workspaceStorage"
-    elif system == "Linux":
-        base_path = home / ".config" / "Cursor" / "User" / "workspaceStorage"
-    else:
-        raise ValueError(f"Unsupported operating system: {system}")
+    with open(config_path, 'r') as f:
+        config = yaml.safe_load(f)
+    logger.debug("Configuration file loaded successfully")
+
+    system = platform.system()
+    logger.debug(f"Detected operating system: {system}")
+
+    if system not in config["default_vscdb_dir_paths"]:
+        error_message = f"Unsupported operating system: {system}"
+        logger.error(error_message)
+        raise ValueError(error_message)
+
+    base_path = Path(os.path.expandvars(config["default_vscdb_dir_paths"][system])).expanduser()
+    logger.debug(f"Resolved base path: {base_path}")
 
     if not base_path.exists():
-        raise FileNotFoundError(f"Cursor workspace storage directory not found: {base_path}")
+        error_message = f"Cursor workspace storage directory not found: {base_path}"
+        logger.error(error_message)
+        raise FileNotFoundError(error_message)
 
+    logger.info(f"Cursor workspace storage directory found: {base_path}")
     return base_path
 
 def get_latest_workspace_db_path() -> str:
