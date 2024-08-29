@@ -30,38 +30,32 @@ class MarkdownChatFormatter(ChatFormatter):
         Returns:
             str: The formatted chat data in Markdown.
         """
-        try:
-            formatted_chats = []
-            for tab_index, tab in enumerate(chat_data['tabs']):
-                bubbles = tab['bubbles']
-                formatted_chat = [f"# Chat Transcript - Tab {tab_index + 1}\n"]
-                tab_image_dir = os.path.join(image_dir, f"tab_{tab_index + 1}") if image_dir else None
-                if tab_image_dir is not None:
-                    os.makedirs(tab_image_dir, exist_ok=True)
+        formatted_chats = []
+        for tab_index, tab in enumerate(chat_data['tabs']):
+            bubbles = tab['bubbles']
+            formatted_chat = [f"# Chat Transcript - Tab {tab_index + 1}\n"]
+            tab_image_dir = os.path.join(image_dir, f"tab_{tab_index + 1}") if image_dir else None
+            if tab_image_dir is not None:
+                os.makedirs(tab_image_dir, exist_ok=True)
 
-                for bubble in bubbles:
-                    if bubble['type'] == 'user':
-                        formatted_chat.append(f"## User:\n\n{bubble['delegate']['a']}\n")
-                        if 'image' in bubble and tab_image_dir is not None:
-                            image_path = bubble['image']['path']
-                            image_filename = os.path.basename(image_path)
-                            new_image_path = os.path.join(tab_image_dir, image_filename)
-                            shutil.copy(image_path, new_image_path)
-                            formatted_chat.append(f"![User Image]({new_image_path})\n")
-                    elif bubble['type'] == 'ai':
-                        model_type = bubble.get('modelType', 'Unknown')
-                        raw_text = re.sub(r'```python:[^\n]+', '```python', bubble['rawText'])
-                        formatted_chat.append(f"## AI ({model_type}):\n\n{raw_text}\n")
+            for bubble in bubbles:
+                if bubble['type'] == 'user':
+                    user_message = bubble.get('delegate', {}).get('a', 'User message unavailable due to missing data.')
+                    formatted_chat.append(f"## User:\n\n{user_message}\n")
+                    if 'image' in bubble and tab_image_dir is not None:
+                        image_path = bubble['image']['path']
+                        image_filename = os.path.basename(image_path)
+                        new_image_path = os.path.join(tab_image_dir, image_filename)
+                        shutil.copy(image_path, new_image_path)
+                        formatted_chat.append(f"![User Image]({new_image_path})\n")
+                elif bubble['type'] == 'ai':
+                    model_type = bubble.get('modelType', 'Unknown')
+                    raw_text = re.sub(r'```python:[^\n]+', '```python', bubble.get('rawText', 'AI response unavailable.'))
+                    formatted_chat.append(f"## AI ({model_type}):\n\n{raw_text}\n")
 
-                formatted_chats.append("\n".join(formatted_chat))
+            formatted_chats.append("\n".join(formatted_chat))
 
-            return formatted_chats
-        except KeyError as e:
-            logger.error(f"KeyError: {e}")
-            return [f"Error: Missing key {e}"]
-        except Exception as e:
-            logger.error(f"Unexpected error: {e}")
-            return [f"Error: {e}"]
+        return formatted_chats
 
 class FileSaver(ABC):
     @abstractmethod

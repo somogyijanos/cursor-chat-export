@@ -63,6 +63,7 @@ def export(
 
         # Convert the chat data from JSON string to dictionary
         chat_data_dict = json.loads(chat_data[0])
+        logger.debug(f"Chat data structure: {json.dumps(chat_data_dict, indent=2)}")  # Log the structure of the chat data
 
         if latest_tab:
             # Get the latest tab by timestamp
