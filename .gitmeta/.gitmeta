@@ -1,0 +1,23 @@
+commit QmaSMLGssbFMq85v5pENbRiuw3GvS14zvEcLgf4bgA5FnU
+Branch: main
+Signed-off by: danimesq.eth (0xDDfC2e10702d8A781727A34D83B3bb3CA94a3E91)
+Signature: 8fc29351210456d6c072524b632d0d594ed59b46dc4f238a426706b2f9d7a7b70e1a1d11810f551cb8203083155fc6f51045d362689c1c3621049be18be5b51e00
+
+------------------------------
+
+Commit CID if including git's SHA1: QmR8JEzsX4FiRt3coVnyL6PhAtCaUhF9cy8HmK135jcUtB
+Commit CID if containing only file hashes: QmVBaLfCDArBSb1MFZgFYsbrVwC1DR9exUGejhbQr5Rgpo
+
+------------------------------
+
+.gitmeta version: r8
+Local folder: /media/daniella/B/git/Floflis/Floflis/ZFrk/cursor-chat-export
+Remote Name: origin
+Remote URL: https://github.com/Floflis/cursor-chat-export.git
+
+------------------------------
+
+chown -h 1000:1000 'AIConversation.md'
+chmod 0664 'AIConversation.md'
+/usr/bin/touch -hcmd "2024-08-29 19:16:38.7930920000 -0300" 'AIConversation.md'
+/usr/bin/touch -hcad "2024-08-29 19:19:59.5484424000 -0300" 'AIConversation.md'
