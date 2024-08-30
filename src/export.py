@@ -9,7 +9,7 @@ import traceback
 
 class ChatFormatter(ABC):
     @abstractmethod
-    def format(self, chat_data: dict[str, Any], image_dir: str = 'images') -> str:
+    def format(self, chat_data: dict[str, Any], image_dir: str = 'images') -> dict[int, str] | None:
         """Format the chat data into Markdown format.
 
         Args:
@@ -17,7 +17,7 @@ class ChatFormatter(ABC):
             image_dir (str): The directory where images will be saved. Defaults to 'images'.
 
         Returns:
-            str: The formatted chat data in Markdown.
+            dict[int, str]: The formatted chat for each tab.
         """
         pass
 
@@ -61,19 +61,24 @@ class MarkdownChatFormatter(ChatFormatter):
 
         return user_text_text
     
-    def format(self, chat_data: dict[str, Any], image_dir: str | None = 'images') -> str | None:
+    def format(self, chat_data: dict[str, Any], image_dir: str | None = 'images', tab_ids: list[int] | None = None) -> dict[int, str] | None:
         """Format the chat data into Markdown format.
 
         Args:
             chat_data (dict[str, Any]): The chat data to format.
             image_dir (str): The directory where images will be saved. Defaults to 'images'.
+            tab_ids (list[int]): List of tab indices to include exclusively.
 
         Returns:
-            str: The formatted chat data in Markdown.
+            dict[int, str]: The formatted chat in Markdown for each tab.
         """
         try:
-            formatted_chats = []
+            formatted_chats = {}
             for tab_index, tab in enumerate(chat_data['tabs']):
+                if tab_ids is not None:
+                    if tab_index not in tab_ids:
+                        continue
+
                 bubbles = tab['bubbles']
                 formatted_chat = [f"# Chat Transcript - Tab {tab_index + 1}\n"]
 
@@ -116,7 +121,7 @@ class MarkdownChatFormatter(ChatFormatter):
                         raw_text = re.sub(r'```python:[^\n]+', '```python', bubble['rawText'])
                         formatted_chat.append(f"## AI ({model_type}):\n\n{raw_text}\n")
 
-                formatted_chats.append("\n".join(formatted_chat))
+                formatted_chats[f"tab_{tab_index + 1}"] = "\n".join(formatted_chat)
 
             logger.success("Chats formatted.")
             return formatted_chats
@@ -163,7 +168,7 @@ class ChatExporter:
         self.formatter = formatter
         self.saver = saver
 
-    def export(self, chat_data: dict[str, Any], output_dir: str, image_dir: str) -> None:
+    def export(self, chat_data: dict[str, Any], output_dir: str, image_dir: str, tab_ids: list[int] | None = None) -> None:
         """Export the chat data by formatting and saving it.
 
         Args:
@@ -173,10 +178,10 @@ class ChatExporter:
         """
         try:
             os.makedirs(output_dir, exist_ok=True)
-            formatted_chats = self.formatter.format(chat_data, image_dir)
+            formatted_chats = self.formatter.format(chat_data, image_dir, tab_ids=tab_ids)
             if formatted_chats is not None:
-                for tab_index, formatted_data in enumerate(formatted_chats):
-                    tab_file_path = os.path.join(output_dir, f"tab_{tab_index + 1}.md")
+                for tab_name, formatted_data in formatted_chats.items():
+                    tab_file_path = os.path.join(output_dir, f"{tab_name}.md")
                     self.saver.save(formatted_data, tab_file_path)
         except Exception as e:
             logger.error(f"Failed to export chat data: {e}")

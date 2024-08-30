@@ -20,7 +20,8 @@ console = Console()
 def export(
     db_path: str = typer.Argument(None, help="The path to the SQLite database file. If not provided, the latest workspace will be used."),
     output_dir: str = typer.Option(None, help="The directory where the output markdown files will be saved. If not provided, prints to command line."),
-    latest_tab: bool = typer.Option(False, "--latest-tab", help="Export only the latest tab. If not set, all tabs will be exported.")
+    latest_tab: bool = typer.Option(False, "--latest-tab", help="Export only the latest tab. If not set, all tabs will be exported."),
+    tab_ids: str = typer.Option(None, help="Comma-separated list of tab IDs to export. For example, '1,2,3'. If not set, all tabs will be exported.")
 ):
     """
     Export chat data from the database to markdown files or print it to the command line.
@@ -43,10 +44,14 @@ def export(
         # Convert the chat data from JSON string to dictionary
         chat_data_dict = json.loads(chat_data[0])
 
+        tab_id_list = None
         if latest_tab:
             # Get the latest tab by timestamp
             latest_tab = max(chat_data_dict['tabs'], key=lambda tab: tab.get('timestamp', 0))
             chat_data_dict['tabs'] = [latest_tab]
+        elif tab_ids:
+            # Filter tabs by provided tab IDs
+            tab_id_list = [int(ti) - 1 for ti in tab_ids.split(',')]
 
         # Check if there are any images in the chat data
         has_images = any('image' in bubble for tab in chat_data_dict['tabs'] for bubble in tab.get('bubbles', []))
@@ -60,11 +65,11 @@ def export(
             # Save the chat data
             saver = MarkdownFileSaver()
             exporter = ChatExporter(formatter, saver)
-            exporter.export(chat_data_dict, output_dir, image_dir)
+            exporter.export(chat_data_dict, output_dir, image_dir, tab_ids=tab_id_list)
             success_message = f"Chat data has been successfully exported to {output_dir}"
             logger.info(success_message)
         else:
-            formatted_chats = formatter.format(chat_data_dict, image_dir)
+            formatted_chats = formatter.format(chat_data_dict, image_dir, tab_ids=tab_id_list)
             # Print the chat data to the command line using markdown
             for formatted_data in formatted_chats:
                 console.print(Markdown(formatted_data))
