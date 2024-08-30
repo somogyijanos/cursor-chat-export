@@ -13,10 +13,6 @@ import yaml
 import platform
 from pathlib import Path
 
-logger.remove()
-logger.add(sys.stderr, level="INFO")
-
-
 app = typer.Typer()
 console = Console()
 
