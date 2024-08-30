@@ -56,8 +56,6 @@ def export(
 
         # Format the chat data
         formatter = MarkdownChatFormatter()
-        formatted_chats = formatter.format(chat_data_dict, image_dir)
-
         if output_dir:
             # Save the chat data
             saver = MarkdownFileSaver()
@@ -66,10 +64,12 @@ def export(
             success_message = f"Chat data has been successfully exported to {output_dir}"
             logger.info(success_message)
         else:
+            formatted_chats = formatter.format(chat_data_dict, image_dir)
             # Print the chat data to the command line using markdown
             for formatted_data in formatted_chats:
                 console.print(Markdown(formatted_data))
             logger.info("Chat data has been successfully printed to the command line")
+        
     except KeyError as e:
         error_message = f"KeyError: {e}. The chat data structure is not as expected. Please check the database content."
         logger.error(error_message)
@@ -193,7 +193,8 @@ def discover(
         if results:
             for db_path, result in results:
                 console.print(Markdown("---"))
-                console.print(f"DATABASE: {os.path.join(os.path.basename(os.path.dirname(db_path)), os.path.basename(db_path))}\n")
+                folder_rel_path = os.path.join(os.path.basename(os.path.dirname(db_path)), os.path.basename(db_path))
+                console.print(f"DATABASE: [link=file://{os.path.dirname(db_path).replace(' ', '%20')}]'{db_path}'[/link]\n")
                 console.print(Markdown(result))
                 console.print('\n\n')
         else:
