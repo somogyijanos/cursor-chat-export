@@ -1,9 +1,11 @@
 import re
 import shutil
 import os
+import json
 from abc import ABC, abstractmethod
 from typing import Any
 from loguru import logger
+import traceback
 
 class ChatFormatter(ABC):
     @abstractmethod
@@ -41,13 +43,50 @@ class MarkdownChatFormatter(ChatFormatter):
 
                 for bubble in bubbles:
                     if bubble['type'] == 'user':
-                        formatted_chat.append(f"## User:\n\n{bubble['delegate']['a']}\n")
+                        user_text = ["## User:\n\n"]
+                        
+                        if "selections" in bubble and bubble["selections"]:
+                            user_text.append(f"[selections]  \n{"\n".join([s["text"] for s in bubble['selections']])}")
+                        
                         if 'image' in bubble and tab_image_dir is not None:
                             image_path = bubble['image']['path']
                             image_filename = os.path.basename(image_path)
                             new_image_path = os.path.join(tab_image_dir, image_filename)
                             shutil.copy(image_path, new_image_path)
-                            formatted_chat.append(f"![User Image]({new_image_path})\n")
+                            user_text.append(f"[image]  \n![User Image]({new_image_path})")
+                        
+                        if "delegate" in bubble:
+                            if bubble["delegate"]:
+                                user_text_text = bubble['delegate']["a"]
+                            else:
+                                user_text_text = ""
+                        elif "text" in bubble:
+                            if bubble["text"]:
+                                user_text_text = bubble['text']
+                            else:
+                                user_text_text = ""
+                        elif "initText" in bubble:
+                            if bubble["initText"]:
+                                user_text_text = bubble['rawText']
+                                user_text_text = json.loads(bubble["initText"])['root']['children'][0]['children'][0]['text']
+                            else:
+                                user_text_text = ""
+                        elif "rawText" in bubble:
+                            if bubble["rawText"]:
+                                user_text_text = bubble['text']
+                            else:
+                                user_text_text = ""
+                        else:
+                            user_text_text = "[ERROR: no user text found]"
+                            logger.error(f"Couldn't find user text entry in one of the bubbles.")
+                            logger.debug(f"Bubble:\n{json.dumps(bubble, indent=4)}")
+                        if user_text_text:
+                            user_text.append(f"[text]  \n{user_text_text}")
+                        
+                        user_text.append("\n")
+
+                        if len(user_text) > 2:
+                            formatted_chat.append("\n".join(user_text))
                     elif bubble['type'] == 'ai':
                         model_type = bubble.get('modelType', 'Unknown')
                         raw_text = re.sub(r'```python:[^\n]+', '```python', bubble['rawText'])
@@ -55,12 +94,19 @@ class MarkdownChatFormatter(ChatFormatter):
 
                 formatted_chats.append("\n".join(formatted_chat))
 
+            logger.success("Chats formatted.")
             return formatted_chats
         except KeyError as e:
-            logger.error(f"KeyError: {e}")
+            logger.error(f"KeyError: Missing key {e} in chat data. Ensure the data structure is correct. Full error: {e}")
             return [f"Error: Missing key {e}"]
+        except FileNotFoundError as e:
+            logger.error(f"FileNotFoundError: {e}. Ensure the image paths are correct. Full error: {e}")
+            return [f"Error: {e}"]
+        except json.JSONDecodeError as e:
+            logger.error(f"JSONDecodeError: {e}. Ensure the JSON data is correctly formatted. Full error: {e}")
+            return [f"Error: {e}"]
         except Exception as e:
-            logger.error(f"Unexpected error: {e}")
+            logger.error(f"Unexpected error: {e}. Full traceback: {traceback.format_exc()}")
             return [f"Error: {e}"]
 
 class FileSaver(ABC):
