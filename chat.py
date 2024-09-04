@@ -17,6 +17,73 @@ app = typer.Typer()
 console = Console()
 
 @app.command()
+def discover_and_export(
+    output_dir: str = typer.Option(None, help="The directory where the output markdown files will be saved. If not provided, exports to the current working directory.")
+):
+    """
+    Discover all state.vscdb files and export their chats to the specified output directory.
+    """
+    if not output_dir:
+        output_dir = os.getcwd()
+    
+    base_path = get_cursor_workspace_path()
+    
+    try:
+        state_files = []
+        for root, _, files in os.walk(base_path):
+            if 'state.vscdb' in files:
+                db_path = os.path.join(root, 'state.vscdb')
+                state_files.append(db_path)
+
+        if not state_files:
+            console.print("No state.vscdb files found.")
+            return
+
+        exported_count = 0
+        for db_path in state_files:
+            try:
+                db_query = VSCDBQuery(db_path)
+                chat_data = db_query.query_aichat_data()
+
+                if "error" in chat_data:
+                    logger.error(f"Error querying chat data from {db_path}: {chat_data['error']}")
+                    continue
+
+                if not chat_data or len(chat_data) == 0:
+                    logger.debug(f"No chat data found in {db_path}")
+                    continue
+
+                chat_data_dict = json.loads(chat_data[0])
+
+                # Only create directories and export if there's actual chat data
+                if chat_data_dict and 'tabs' in chat_data_dict and chat_data_dict['tabs']:
+                    workspace_name = os.path.basename(os.path.dirname(db_path))
+                    workspace_output_dir = os.path.join(output_dir, workspace_name)
+                    os.makedirs(workspace_output_dir, exist_ok=True)
+
+                    image_dir = os.path.join(workspace_output_dir, 'images')
+                    os.makedirs(image_dir, exist_ok=True)
+
+                    formatter = MarkdownChatFormatter()
+                    saver = MarkdownFileSaver()
+                    exporter = ChatExporter(formatter, saver)
+
+                    exporter.export(chat_data_dict, workspace_output_dir, image_dir)
+                    console.print(f"Exported chats from {db_path} to {workspace_output_dir}")
+                    exported_count += 1
+                else:
+                    logger.debug(f"No valid chat data found in {db_path}")
+
+            except Exception as e:
+                logger.error(f"Failed to export chats from {db_path}: {e}")
+
+        console.print(f"Discover and export process completed. Exported {exported_count} workspace(s) with chat data.")
+
+    except Exception as e:
+        logger.error(f"An error occurred during discover and export: {e}")
+        raise typer.Exit(code=1)
+
+@app.command()
 def export(
     db_path: str = typer.Argument(None, help="The path to the SQLite database file. If not provided, the latest workspace will be used."),
     output_dir: str = typer.Option(None, help="The directory where the output markdown files will be saved. If not provided, prints to command line."),

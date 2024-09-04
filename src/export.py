@@ -89,7 +89,8 @@ class MarkdownChatFormatter(ChatFormatter):
                         
                         # Selections
                         if "selections" in bubble and bubble["selections"]:
-                            user_text.append(f"[selections]  \n{"\n".join([s["text"] for s in bubble['selections']])}")
+                            selections_text = '\n'.join([s['text'] for s in bubble['selections']])
+                            user_text.append(f"[selections]  \n{selections_text}")
                         
                         # Images
                         if 'image' in bubble and image_dir is not None:
