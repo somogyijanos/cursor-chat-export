@@ -70,3 +70,15 @@ See `./chat.py export --help` for general help. Examples:
 # Export all chats of a specifc workspace
 ./chat.py export --output-dir "/path/to/output" "/path/to/workspaces/workspace-dir/state.vscdb"
 ```
+
+
+### Discover and Export All Chats
+See `./chat.py discover-and-export --help` for general help. Examples:
+```sh
+# Help on usage
+./chat.py discover-and-export --help
+
+# Export all chats of a specified path as Markdown
+./chat.py discover-and-export --output-dir "/path/to/output"
+
+```
