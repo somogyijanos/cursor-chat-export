@@ -4,9 +4,10 @@ import os
 import sys
 import typer
 from src.vscdb import VSCDBQuery
-from src.export import ChatExporter, MarkdownChatFormatter, MarkdownFileSaver
+from src.export import ChatExporter, MarkdownChatFormatter, JsonChatFormatter, MarkdownFileSaver, JsonFileSaver
 from rich.console import Console
 from rich.markdown import Markdown
+from rich.json import JSON
 from loguru import logger
 import json
 import yaml
@@ -21,7 +22,8 @@ def export(
     db_path: str = typer.Argument(None, help="The path to the SQLite database file. If not provided, the latest workspace will be used."),
     output_dir: str = typer.Option(None, help="The directory where the output markdown files will be saved. If not provided, prints to command line."),
     latest_tab: bool = typer.Option(False, "--latest-tab", help="Export only the latest tab. If not set, all tabs will be exported."),
-    tab_ids: str = typer.Option(None, help="Comma-separated list of tab IDs to export. For example, '1,2,3'. If not set, all tabs will be exported.")
+    tab_ids: str = typer.Option(None, help="Comma-separated list of tab IDs to export. For example, '1,2,3'. If not set, all tabs will be exported."),
+    output_format: str = typer.Option("markdown", help="The format to save the exported data, can be markdown or json. If not set, markdown will be saved."),
 ):
     """
     Export chat data from the database to markdown files or print it to the command line.
@@ -34,15 +36,22 @@ def export(
     try:
         # Query the AI chat data from the database
         db_query = VSCDBQuery(db_path)
+
         chat_data = db_query.query_aichat_data()
+        context_data = db_query.query_context_data()
 
         if "error" in chat_data:
             error_message = f"Error querying chat data: {chat_data['error']}"
             logger.error(error_message)
             raise typer.Exit(code=1)
+        if "error" in context_data:
+            error_message = f"Error querying context data: {context_data['error']}"
+            logger.error(error_message)
+            raise typer.Exit(code=1)
 
         # Convert the chat data from JSON string to dictionary
         chat_data_dict = json.loads(chat_data[0])
+        context_data_dict = json.loads(context_data[1])
 
         tab_id_list = None
         if latest_tab:
@@ -60,20 +69,36 @@ def export(
             image_dir = os.path.join(output_dir, 'images')
 
         # Format the chat data
-        formatter = MarkdownChatFormatter()
-        if output_dir:
-            # Save the chat data
-            saver = MarkdownFileSaver()
-            exporter = ChatExporter(formatter, saver)
-            exporter.export(chat_data_dict, output_dir, image_dir, tab_ids=tab_id_list)
-            success_message = f"Chat data has been successfully exported to {output_dir}"
-            logger.info(success_message)
+        if output_format == 'json':
+            formatter = JsonChatFormatter()
+            if output_dir:
+                # Save the chat data
+                saver = JsonFileSaver()
+                exporter = ChatExporter(formatter, saver)
+                exporter.export(chat_data_dict, context_data_dict, output_dir, image_dir, tab_ids=tab_id_list)
+                success_message = f"Chat data has been successfully exported to {output_dir}"
+                logger.info(success_message)
+            else:
+                formatted_chats = formatter.format(chat_data_dict, context_data_dict, image_dir, tab_ids=tab_id_list)
+                # Print the chat data to the command line using markdown
+                for formatted_data in formatted_chats:
+                    console.print(JSON(formatted_data))
+                logger.info("Chat data has been successfully printed to the command line")
         else:
-            formatted_chats = formatter.format(chat_data_dict, image_dir, tab_ids=tab_id_list)
-            # Print the chat data to the command line using markdown
-            for formatted_data in formatted_chats:
-                console.print(Markdown(formatted_data))
-            logger.info("Chat data has been successfully printed to the command line")
+            formatter = MarkdownChatFormatter()
+            if output_dir:
+                # Save the chat data
+                saver = MarkdownFileSaver()
+                exporter = ChatExporter(formatter, saver)
+                exporter.export(chat_data_dict, context_data_dict, output_dir, image_dir, tab_ids=tab_id_list)
+                success_message = f"Chat data has been successfully exported to {output_dir}"
+                logger.info(success_message)
+            else:
+                formatted_chats = formatter.format(chat_data_dict, context_data_dict, image_dir, tab_ids=tab_id_list)
+                # Print the chat data to the command line using markdown
+                for formatted_data in formatted_chats:
+                    console.print(Markdown(formatted_data))
+                logger.info("Chat data has been successfully printed to the command line")
         
     except KeyError as e:
         error_message = f"KeyError: {e}. The chat data structure is not as expected. Please check the database content."
@@ -178,7 +203,7 @@ def discover(
             else:
                 chat_data_dict = json.loads(chat_data[0])
                 formatter = MarkdownChatFormatter()
-                formatted_chats = formatter.format(chat_data_dict, image_dir=None)
+                formatted_chats = formatter.format(chat_data_dict, dict(), image_dir=None)
                 
                 if search_text:
                     # Filter the formatted data to include only lines containing the search text
