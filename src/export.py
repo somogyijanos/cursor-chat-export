@@ -7,9 +7,11 @@ from typing import Any
 from loguru import logger
 import traceback
 
+
 class ChatFormatter(ABC):
     @abstractmethod
-    def format(self, chat_data: dict[str, Any], image_dir: str = 'images') -> dict[int, str] | None:
+    def format(self, chat_data: dict[str, Any], context_data: dict[str, Any], image_dir: str = 'images') -> dict[
+                                                                                                                int, str] | None:
         """Format the chat data into Markdown format.
 
         Args:
@@ -21,7 +23,8 @@ class ChatFormatter(ABC):
         """
         pass
 
-class MarkdownChatFormatter(ChatFormatter):
+
+class CommonFormatter(ChatFormatter):
     def _extract_text_from_user_bubble(self, bubble: dict) -> str:
         try:
             if "delegate" in bubble:
@@ -53,15 +56,106 @@ class MarkdownChatFormatter(ChatFormatter):
                 user_text_text = "[ERROR: no user text found]"
                 logger.error(f"Couldn't find user text entry in one of the bubbles.")
                 logger.debug(f"Bubble:\n{json.dumps(bubble, indent=4)}")
-        
+
         except Exception as e:
             user_text_text = "[ERROR: no user text found]"
             logger.error(f"Couldn't find user text entry in one of the bubbles. Error: {e}")
             logger.debug(f"Bubble:\n{json.dumps(bubble, indent=4)}")
 
         return user_text_text
-    
-    def format(self, chat_data: dict[str, Any], image_dir: str | None = 'images', tab_ids: list[int] | None = None) -> dict[int, str] | None:
+
+    def _extract_context(self, context_data: dict[str, Any]) -> dict[str, Any]:
+        bubble_id_to_context = {}
+        for chat_meta_data in context_data['persistentChatMetadata']:
+            if ('usedCodebase' not in chat_meta_data['predictedContext']
+                    or 'fileResults' not in chat_meta_data['predictedContext']['usedCodebase']):
+                bubble_id_to_context[chat_meta_data['bubbleId']] = []
+                continue
+            bubble_id_to_context[chat_meta_data['bubbleId']] = chat_meta_data['predictedContext']['usedCodebase'][
+                'fileResults']
+        return bubble_id_to_context
+
+    def format(self, chat_data: dict[str, Any], context_data: dict[str, Any], image_dir: str = 'images') -> dict[
+                                                                                                                int, str] | None:
+        pass
+
+
+class JsonChatFormatter(CommonFormatter):
+    def format(self, chat_data: dict[str, Any], context_data: dict[str, Any], image_dir: str | None = 'images',
+               tab_ids: list[int] | None = None) -> dict[int, str] | None:
+        try:
+            bubble_id_to_context = self._extract_context(context_data)
+            formatted_chats = {}
+            for tab_index, tab in enumerate(chat_data['tabs']):
+                if tab_ids is not None:
+                    if tab_index not in tab_ids:
+                        continue
+                tab_id = tab_index + 1
+
+                bubbles = tab['bubbles']
+                formatted_chat = []
+
+                for bubble in bubbles:
+                    conversation = {}
+                    # USER
+                    if bubble['type'] == 'user':
+                        user_text = {}
+
+                        # Selections
+                        if "selections" in bubble and bubble["selections"]:
+                            user_text['selections'] = "\n".join([s["text"] for s in bubble['selections']])
+
+                        # Images
+                        if 'image' in bubble and image_dir is not None:
+                            image_path = bubble['image']['path']
+                            if os.path.exists(image_path):
+                                image_filename = os.path.basename(image_path)
+                                new_image_path = os.path.join(tab_image_dir, image_filename)
+                                tab_image_dir = os.path.join(image_dir, f"tab_{tab_index + 1}") if image_dir else None
+                                if tab_image_dir is not None:
+                                    os.makedirs(tab_image_dir, exist_ok=True)
+                                shutil.copy(image_path, new_image_path)
+                                user_text['image'] = new_image_path
+                            else:
+                                logger.error(f"Image file {image_path} not found for tab {tab_index + 1}.")
+                                user_text['image'] = ''
+
+                        # Text
+                        user_text_text = self._extract_text_from_user_bubble(bubble)
+                        if user_text_text:
+                            user_text['text'] = user_text_text
+                        else:
+                            user_text['text'] = ''
+
+                        # Context
+                        context = bubble_id_to_context.get(bubble['id'])
+                        user_text['context'] = context
+
+                        if user_text['text']:
+                            conversation['user'] = user_text
+                    # AI
+                    elif bubble['type'] == 'ai':
+                        ai_text = {}
+                        model_type = bubble.get('modelType', 'Unknown')
+                        raw_text = re.sub(r'```python:[^\n]+', '```python', bubble['rawText'])
+                        ai_text['model'] = model_type
+                        ai_text['text'] = raw_text
+                        conversation['ai'] = ai_text
+
+                    if conversation:
+                        formatted_chat.append(conversation)
+                formatted_chats[f'tab_{tab_index + 1}'] = formatted_chat
+
+            logger.success("Chats formatted.")
+            return formatted_chats
+        except Exception as e:
+            logger.error(f"Unexpected error: {e}. Full traceback: {traceback.format_exc()}")
+            return
+
+
+class MarkdownChatFormatter(CommonFormatter):
+    def format(self, chat_data: dict[str, Any], context_data: dict[str, Any], image_dir: str | None = 'images',
+               tab_ids: list[int] | None = None) -> dict[int, str] | None:
         """Format the chat data into Markdown format.
 
         Args:
@@ -73,6 +167,7 @@ class MarkdownChatFormatter(ChatFormatter):
             dict[int, str]: The formatted chat in Markdown for each tab.
         """
         try:
+            bubble_id_to_context = self._extract_context(context_data)
             formatted_chats = {}
             for tab_index, tab in enumerate(chat_data['tabs']):
                 if tab_ids is not None:
@@ -86,11 +181,11 @@ class MarkdownChatFormatter(ChatFormatter):
                     # USER
                     if bubble['type'] == 'user':
                         user_text = ["## User:\n\n"]
-                        
+
                         # Selections
                         if "selections" in bubble and bubble["selections"]:
                             user_text.append(f"[selections]  \n{"\n".join([s["text"] for s in bubble['selections']])}")
-                        
+
                         # Images
                         if 'image' in bubble and image_dir is not None:
                             image_path = bubble['image']['path']
@@ -105,12 +200,18 @@ class MarkdownChatFormatter(ChatFormatter):
                             else:
                                 logger.error(f"Image file {image_path} not found for tab {tab_index + 1}.")
                                 user_text.append(f"[image]  \n![User Image]()")
-                        
+
                         # Text
                         user_text_text = self._extract_text_from_user_bubble(bubble)
                         if user_text_text:
                             user_text.append(f"[text]  \n{user_text_text}")
-                        
+                        user_text.append("\n")
+
+                        context = bubble_id_to_context.get(bubble['id'])
+                        if context:
+                            user_text.append(f"[context]")
+                            for cxt in context:
+                                user_text.append(f"- {cxt['file']['relativeWorkspacePath']}: {round(cxt['score'], 2)}")
                         user_text.append("\n")
 
                         if len(user_text) > 2:
@@ -129,6 +230,7 @@ class MarkdownChatFormatter(ChatFormatter):
             logger.error(f"Unexpected error: {e}. Full traceback: {traceback.format_exc()}")
             return
 
+
 class FileSaver(ABC):
     @abstractmethod
     def save(self, formatted_data: str, file_path: str) -> None:
@@ -140,6 +242,7 @@ class FileSaver(ABC):
         """
         pass
 
+
 class MarkdownFileSaver(FileSaver):
     def save(self, formatted_data: str, file_path: str) -> None:
         """Save the formatted data to a Markdown file.
@@ -149,13 +252,32 @@ class MarkdownFileSaver(FileSaver):
             file_path (str): The path to the Markdown file where the data will be saved.
         """
         try:
-            with open(file_path, 'w') as file:
+            with open(f'{file_path}.md', 'w') as file:
                 file.write(formatted_data)
             logger.info(f"Chat has been formatted and saved as {file_path}")
         except IOError as e:
             logger.error(f"IOError: {e}")
         except Exception as e:
             logger.error(f"Unexpected error: {e}")
+
+
+class JsonFileSaver(FileSaver):
+    def save(self, formatted_data: str, file_path: str) -> None:
+        """Save the formatted data to a Markdown file.
+
+        Args:
+            formatted_data (str): The formatted data to save.
+            file_path (str): The path to the Markdown file where the data will be saved.
+        """
+        try:
+            with open(f'{file_path}.json', 'w') as file:
+                file.write(json.dumps(formatted_data, indent=2, ensure_ascii=False))
+            logger.info(f"Chat has been formatted and saved as {file_path}")
+        except IOError as e:
+            logger.error(f"IOError: {e}")
+        except Exception as e:
+            logger.error(f"Unexpected error: {e}")
+
 
 class ChatExporter:
     def __init__(self, formatter: ChatFormatter, saver: FileSaver) -> None:
@@ -168,20 +290,22 @@ class ChatExporter:
         self.formatter = formatter
         self.saver = saver
 
-    def export(self, chat_data: dict[str, Any], output_dir: str, image_dir: str, tab_ids: list[int] | None = None) -> None:
+    def export(self, chat_data: dict[str, Any], context_data: dict[str, Any], output_dir: str, image_dir: str,
+               tab_ids: list[int] | None = None) -> None:
         """Export the chat data by formatting and saving it.
 
         Args:
             chat_data (dict[str, Any]): The chat data to export.
             output_dir (str): The directory where the formatted data will be saved.
             image_dir (str): The directory where images will be saved.
+            context_data (dict[str, Any]): The context data to export in questions like @codebase.
         """
         try:
             os.makedirs(output_dir, exist_ok=True)
-            formatted_chats = self.formatter.format(chat_data, image_dir, tab_ids=tab_ids)
+            formatted_chats = self.formatter.format(chat_data, context_data, image_dir, tab_ids=tab_ids)
             if formatted_chats is not None:
                 for tab_name, formatted_data in formatted_chats.items():
-                    tab_file_path = os.path.join(output_dir, f"{tab_name}.md")
+                    tab_file_path = os.path.join(output_dir, f"{tab_name}")
                     self.saver.save(formatted_data, tab_file_path)
         except Exception as e:
             logger.error(f"Failed to export chat data: {e}")

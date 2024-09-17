@@ -43,7 +43,24 @@ class VSCDBQuery:
         except Exception as e:
             logger.error(f"Unexpected error: {e}")
             return {"error": str(e)}
-        
+
+    def query_context_data(self) -> list[Any] | dict[str, str]:
+        try:
+            with open('config.yml', 'r') as config_file:
+                config = yaml.safe_load(config_file)
+            query = config['context_query']
+            logger.debug("Loaded Context query from config.yaml")
+            return self.query_to_json(query)
+        except FileNotFoundError as e:
+            logger.error(f"Config file not found: {e}")
+            return {"error": str(e)}
+        except yaml.YAMLError as e:
+            logger.error(f"Error parsing config file: {e}")
+            return {"error": str(e)}
+        except Exception as e:
+            logger.error(f"Unexpected error: {e}")
+            return {"error": str(e)}
+
     def query_aichat_data(self) -> list[Any] | dict[str, str]:
         """
         Query the AI chat data from the database.
