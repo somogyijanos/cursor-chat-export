@@ -1,4 +1,0 @@
-loguru
-pyyaml
-typer
-rich

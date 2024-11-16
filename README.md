@@ -19,10 +19,12 @@ Also see [this](https://forum.cursor.com/t/guide-5-steps-exporting-chats-prompts
     cd cursor-chat-export
     ```
 
-2. Install the required dependencies:
+2. Install using Poetry:
     ```sh
-    pip install -r requirements.txt
+    poetry install
     ```
+
+If you don't have Poetry installed, you can install it first following the [official installation guide](https://python-poetry.org/docs/#installation).
 
 ## Usage
 
@@ -35,38 +37,38 @@ Both the `discover` and `export` commands will work with this path by default, b
 ### Discover Chats
 ```sh
 # Help on usage
-./chat.py discover --help
+poetry run cursor-chat discover --help
 
 # Discover all chats from all workspaces
-./chat.py discover
+poetry run cursor-chat discover
 
 # Apply text filter
-./chat.py discover --search-text "matplotlib"
+poetry run cursor-chat discover --search-text "matplotlib"
 
 # Discover all chats from all workspaces at a custom path
-./chat.py discover "/path/to/workspaces"
+poetry run cursor-chat discover "/path/to/workspaces"
 ```
 
 ---
 
 ### Export Chats
-See `./chat.py export --help` for general help. Examples:
+See `poetry run cursor-chat export --help` for general help. Examples:
 ```sh
 # Help on usage
-./chat.py export --help
+poetry run cursor-chat export --help
 
 # Print all chats of the most recent workspace to the command line
-./chat.py export
+poetry run cursor-chat export
 
 # Export all chats of the most recent workspace as Markdown
-./chat.py export --output-dir "/path/to/output"
+poetry run cursor-chat export --output-dir "/path/to/output"
 
 # Export only the latest chat of the most recent workspace
-./chat.py export --latest-tab --output-dir "/path/to/output"
+poetry run cursor-chat export --latest-tab --output-dir "/path/to/output"
 
 # Export only chat No. 2 and 3 of the most recent workspace
-./chat.py export --tab-ids 2,3 --output-dir "/path/to/output"
+poetry run cursor-chat export --tab-ids 2,3 --output-dir "/path/to/output"
 
 # Export all chats of a specifc workspace
-./chat.py export --output-dir "/path/to/output" "/path/to/workspaces/workspace-dir/state.vscdb"
+poetry run cursor-chat export --output-dir "/path/to/output" "/path/to/workspaces/workspace-dir/state.vscdb"
 ```

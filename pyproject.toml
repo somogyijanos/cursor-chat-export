@@ -1,0 +1,32 @@
+[tool.poetry]
+name = "cursor-chat-export-developerisnow"
+version = "0.1.0"
+description = "Tool to export Cursor editor chat history"
+authors = ["developerisnow <35399970+developerisnow@users.noreply.github.com>"]
+readme = "README.md"
+packages = [{include = "cursor_chat_export", from = "src"}]
+
+[tool.poetry.dependencies]
+python = "^3.11"
+loguru = "^0.7.2"
+pyyaml = "^6.0.1"
+typer = "^0.9.0"
+rich = "^13.7.0"
+
+[tool.poetry.scripts]
+cursor-chat = "cursor_chat_export.cli:app"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
+
+[tool.black]
+line-length = 88
+target-version = ['py311']
+include = '\.pyi?$'
+
+[tool.isort]
+profile = "black"
+multi-line-output = 3
+line-length = 88
+
