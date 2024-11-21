@@ -1,5 +1,5 @@
 default_vscdb_dir_paths:
   Windows: "%APPDATA%/Cursor/User/workspaceStorage"
   Darwin: "~/Library/Application Support/Cursor/User/workspaceStorage"
-  Linux: "~/.config/Cursor/User/workspaceStorage"
+  Linux: "/mnt/c/Users/lcx/AppData/Roaming/Cursor/User/workspaceStorage"
 aichat_query: "SELECT value FROM ItemTable WHERE [key] IN ('workbench.panel.aichat.view.aichat.chatdata');"
