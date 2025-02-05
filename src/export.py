@@ -53,20 +53,20 @@ class MarkdownChatFormatter(ChatFormatter):
                 user_text_text = "[ERROR: no user text found]"
                 logger.error(f"Couldn't find user text entry in one of the bubbles.")
                 logger.debug(f"Bubble:\n{json.dumps(bubble, indent=4)}")
-        
+
         except Exception as e:
             user_text_text = "[ERROR: no user text found]"
             logger.error(f"Couldn't find user text entry in one of the bubbles. Error: {e}")
             logger.debug(f"Bubble:\n{json.dumps(bubble, indent=4)}")
 
         return user_text_text
-    
-    def format(self, chat_data: dict[str, Any], image_dir: str | None = 'images', tab_ids: list[int] | None = None) -> dict[int, str] | None:
+
+    def format(self, chat_data: list[str], image_dir: str | None = 'images', tab_ids: list[int] | None = None) -> dict[int, str] | None:
         """Format the chat data into Markdown format.
 
         Args:
-            chat_data (dict[str, Any]): The chat data to format.
-            image_dir (str): The directory where images will be saved. Defaults to 'images'.
+            chat_data (list[str]): List of JSON strings containing chat data.
+            image_dir (str): The directory where images will be saved.
             tab_ids (list[int]): List of tab indices to include exclusively.
 
         Returns:
@@ -74,60 +74,96 @@ class MarkdownChatFormatter(ChatFormatter):
         """
         try:
             formatted_chats = {}
-            for tab_index, tab in enumerate(chat_data['tabs']):
-                if tab_ids is not None:
-                    if tab_index not in tab_ids:
-                        continue
-
-                bubbles = tab['bubbles']
-                formatted_chat = [f"# Chat Transcript - Tab {tab_index + 1}\n"]
-
-                for bubble in bubbles:
-                    # USER
-                    if bubble['type'] == 'user':
-                        user_text = ["## User:\n\n"]
-                        
-                        # Selections
-                        if "selections" in bubble and bubble["selections"]:
-                            user_text.append(f"[selections]  \n{"\n".join([s["text"] for s in bubble['selections']])}")
-                        
-                        # Images
-                        if 'image' in bubble and image_dir is not None:
-                            image_path = bubble['image']['path']
-                            if os.path.exists(image_path):
-                                image_filename = os.path.basename(image_path)
-                                new_image_path = os.path.join(tab_image_dir, image_filename)
-                                tab_image_dir = os.path.join(image_dir, f"tab_{tab_index + 1}") if image_dir else None
-                                if tab_image_dir is not None:
-                                    os.makedirs(tab_image_dir, exist_ok=True)
-                                shutil.copy(image_path, new_image_path)
-                                user_text.append(f"[image]  \n![User Image]({new_image_path})")
-                            else:
-                                logger.error(f"Image file {image_path} not found for tab {tab_index + 1}.")
-                                user_text.append(f"[image]  \n![User Image]()")
-                        
-                        # Text
-                        user_text_text = self._extract_text_from_user_bubble(bubble)
-                        if user_text_text:
-                            user_text.append(f"[text]  \n{user_text_text}")
-                        
-                        user_text.append("\n")
-
-                        if len(user_text) > 2:
-                            formatted_chat.append("\n".join(user_text))
-                    # AI
-                    elif bubble['type'] == 'ai':
-                        model_type = bubble.get('modelType', 'Unknown')
-                        raw_text = re.sub(r'```python:[^\n]+', '```python', bubble['rawText'])
-                        formatted_chat.append(f"## AI ({model_type}):\n\n{raw_text}\n")
-
-                formatted_chats[f"tab_{tab_index + 1}"] = "\n".join(formatted_chat)
-
+            chat_count = 0
+            
+            for data_str in chat_data:
+                data = json.loads(data_str)
+                
+                # Handle aichat data
+                if 'tabs' in data:
+                    for tab_index, tab in enumerate(data['tabs']):
+                        if tab_ids is not None and tab_index not in tab_ids:
+                            continue
+                        chat_count += 1
+                        formatted_chat = self._format_aichat_tab(tab, chat_count, image_dir)
+                        formatted_chats[f"chat_{chat_count}"] = formatted_chat
+                
+                # Handle composer data
+                elif 'allComposers' in data:
+                    for composer in data['allComposers']:
+                        chat_count += 1
+                        formatted_chat = self._format_composer_chat(composer, chat_count)
+                        formatted_chats[f"chat_{chat_count}"] = formatted_chat
+            
             logger.success("Chats formatted.")
             return formatted_chats
         except Exception as e:
             logger.error(f"Unexpected error: {e}. Full traceback: {traceback.format_exc()}")
-            return
+            return None
+
+    def _format_aichat_tab(self, tab: dict, index: int, image_dir: str | None) -> str:
+        """Format a single AI chat tab."""
+        formatted_chat = [f"# Chat Transcript - {tab.get('chatTitle', f'Chat {index}')}\n"]
+        
+        for bubble in tab['bubbles']:
+            if bubble['type'] == 'user':
+                formatted_chat.extend(self._format_user_bubble(bubble, index, image_dir))
+            elif bubble['type'] == 'ai':
+                formatted_chat.extend(self._format_ai_bubble(bubble))
+        
+        return "\n".join(formatted_chat)
+
+    def _format_composer_chat(self, composer: dict, index: int) -> str:
+        """Format a single composer chat."""
+        formatted_chat = [f"# Composer Chat - {composer.get('title', f'Chat {index}')}\n"]
+        
+        if 'messages' in composer:
+            for msg in composer['messages']:
+                if msg.get('role') == 'user':
+                    formatted_chat.append(f"## User:\n\n{msg.get('content', '')}\n")
+                elif msg.get('role') == 'assistant':
+                    formatted_chat.append(f"## AI ({msg.get('model', 'Unknown')}):\n\n{msg.get('content', '')}\n")
+        
+        return "\n".join(formatted_chat)
+
+    def _format_user_bubble(self, bubble: dict, index: int, image_dir: str | None) -> list[str]:
+        user_text = ["## User:\n\n"]
+
+        # Selections
+        if "selections" in bubble and bubble["selections"]:
+            user_text.append(f"[selections]  \n{'\n'.join([s['text'] for s in bubble['selections']])}")
+
+        # Images
+        if 'image' in bubble and image_dir is not None:
+            image_path = bubble['image']['path']
+            if os.path.exists(image_path):
+                image_filename = os.path.basename(image_path)
+                new_image_path = os.path.join(tab_image_dir, image_filename)
+                tab_image_dir = os.path.join(image_dir, f"tab_{index}") if image_dir else None
+                if tab_image_dir is not None:
+                    os.makedirs(tab_image_dir, exist_ok=True)
+                shutil.copy(image_path, new_image_path)
+                user_text.append(f"[image]  \n![User Image]({new_image_path})")
+            else:
+                logger.error(f"Image file {image_path} not found for tab {index}.")
+                user_text.append(f"[image]  \n![User Image]()")
+
+        # Text
+        user_text_text = self._extract_text_from_user_bubble(bubble)
+        if user_text_text:
+            user_text.append(f"[text]  \n{user_text_text}")
+
+        user_text.append("\n")
+
+        if len(user_text) > 2:
+            return user_text
+        else:
+            return []
+
+    def _format_ai_bubble(self, bubble: dict) -> list[str]:
+        model_type = bubble.get('modelType', 'Unknown')
+        raw_text = re.sub(r'```python:[^\n]+', '```python', bubble['rawText'])
+        return [f"## AI ({model_type}):\n\n{raw_text}\n"]
 
 class FileSaver(ABC):
     @abstractmethod
@@ -168,21 +204,22 @@ class ChatExporter:
         self.formatter = formatter
         self.saver = saver
 
-    def export(self, chat_data: dict[str, Any], output_dir: str, image_dir: str, tab_ids: list[int] | None = None) -> None:
+    def export(self, chat_data: list[str], output_dir: str, image_dir: str, tab_ids: list[int] | None = None) -> None:
         """Export the chat data by formatting and saving it.
 
         Args:
-            chat_data (dict[str, Any]): The chat data to export.
+            chat_data (list[str]): List of JSON strings containing chat data.
             output_dir (str): The directory where the formatted data will be saved.
             image_dir (str): The directory where images will be saved.
+            tab_ids (list[int]): List of tab indices to include exclusively.
         """
         try:
             os.makedirs(output_dir, exist_ok=True)
             formatted_chats = self.formatter.format(chat_data, image_dir, tab_ids=tab_ids)
             if formatted_chats is not None:
-                for tab_name, formatted_data in formatted_chats.items():
-                    tab_file_path = os.path.join(output_dir, f"{tab_name}.md")
-                    self.saver.save(formatted_data, tab_file_path)
+                for chat_name, formatted_data in formatted_chats.items():
+                    file_path = os.path.join(output_dir, f"{chat_name}.md")
+                    self.saver.save(formatted_data, file_path)
         except Exception as e:
             logger.error(f"Failed to export chat data: {e}")
 
