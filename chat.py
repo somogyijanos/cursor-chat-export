@@ -32,61 +32,42 @@ def export(
     image_dir = None
 
     try:
-        # Query the AI chat data from the database
         db_query = VSCDBQuery(db_path)
+
+        # List and inspect tables
+        logger.info("Inspecting database tables...")
+        tables = db_query.list_tables()
+        for table in tables:
+            db_query.inspect_table(table)
+
+        # Query chat data
         chat_data = db_query.query_aichat_data()
+        if isinstance(chat_data, dict) and "error" in chat_data:
+            logger.error(f"Error querying chat data: {chat_data['error']}")
+            return
 
-        if "error" in chat_data:
-            error_message = f"Error querying chat data: {chat_data['error']}"
-            logger.error(error_message)
-            raise typer.Exit(code=1)
-
-        # Convert the chat data from JSON string to dictionary
-        chat_data_dict = json.loads(chat_data[0])
-
+        # Parse tab IDs if provided
         tab_id_list = None
-        if latest_tab:
-            # Get the latest tab by timestamp
-            latest_tab = max(chat_data_dict['tabs'], key=lambda tab: tab.get('timestamp', 0))
-            chat_data_dict['tabs'] = [latest_tab]
-        elif tab_ids:
-            # Filter tabs by provided tab IDs
+        if tab_ids:
             tab_id_list = [int(ti) - 1 for ti in tab_ids.split(',')]
 
-        # Check if there are any images in the chat data
-        has_images = any('image' in bubble for tab in chat_data_dict['tabs'] for bubble in tab.get('bubbles', []))
-
-        if has_images and output_dir:
-            image_dir = os.path.join(output_dir, 'images')
-
-        # Format the chat data
-        formatter = MarkdownChatFormatter()
+        # Check if output directory is provided
         if output_dir:
             # Save the chat data
+            formatter = MarkdownChatFormatter()
             saver = MarkdownFileSaver()
             exporter = ChatExporter(formatter, saver)
-            exporter.export(chat_data_dict, output_dir, image_dir, tab_ids=tab_id_list)
-            success_message = f"Chat data has been successfully exported to {output_dir}"
-            logger.info(success_message)
+            exporter.export(chat_data, output_dir, image_dir, tab_ids=tab_id_list)
+            logger.info(f"Chat data has been successfully exported to {output_dir}")
         else:
-            formatted_chats = formatter.format(chat_data_dict, image_dir, tab_ids=tab_id_list)
-            # Print the chat data to the command line using markdown
-            for formatted_data in formatted_chats:
-                console.print(Markdown(formatted_data))
-            logger.info("Chat data has been successfully printed to the command line")
-        
-    except KeyError as e:
-        error_message = f"KeyError: {e}. The chat data structure is not as expected. Please check the database content."
-        logger.error(error_message)
-        raise typer.Exit(code=1)
-    except json.JSONDecodeError as e:
-        error_message = f"JSON decode error: {e}"
-        logger.error(error_message)
-        raise typer.Exit(code=1)
-    except FileNotFoundError as e:
-        error_message = f"File not found: {e}"
-        logger.error(error_message)
-        raise typer.Exit(code=1)
+            # Print to console
+            formatter = MarkdownChatFormatter()
+            formatted_chats = formatter.format(chat_data, None, tab_ids=tab_id_list)
+            if formatted_chats:
+                for formatted_data in formatted_chats.values():
+                    console.print(Markdown(formatted_data))
+                logger.info("Chat data has been successfully printed to the command line")
+
     except Exception as e:
         error_message = f"Failed to export chat data: {e}"
         logger.error(error_message)
@@ -95,7 +76,7 @@ def export(
 def get_cursor_workspace_path() -> Path:
     config_path = Path("config.yml")
     logger.debug(f"Looking for configuration file at: {config_path}")
-    
+
     if not config_path.exists():
         error_message = f"Configuration file not found: {config_path}"
         logger.error(error_message)
@@ -128,7 +109,7 @@ def get_latest_workspace_db_path() -> str:
     base_path = get_cursor_workspace_path()
     workspace_folder = max(base_path.glob("*"), key=os.path.getmtime)
     db_path = workspace_folder / "state.vscdb"
-    
+
     if not db_path.exists():
         raise FileNotFoundError(f"state.vscdb not found in {workspace_folder}")
 
@@ -145,7 +126,7 @@ def discover(
     """
     if not directory:
         directory = str(get_cursor_workspace_path())
-    
+
     if limit is None:
         limit = -1 if search_text else 10
 
@@ -179,7 +160,7 @@ def discover(
                 chat_data_dict = json.loads(chat_data[0])
                 formatter = MarkdownChatFormatter()
                 formatted_chats = formatter.format(chat_data_dict, image_dir=None)
-                
+
                 if search_text:
                     # Filter the formatted data to include only lines containing the search text
                     for formatted_data in formatted_chats:
