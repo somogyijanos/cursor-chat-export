@@ -75,27 +75,32 @@ class MarkdownChatFormatter(ChatFormatter):
         try:
             formatted_chats = {}
             chat_count = 0
-            
+
             for data_str in chat_data:
                 data = json.loads(data_str)
-                
+
                 # Handle aichat data
                 if 'tabs' in data:
                     for tab_index, tab in enumerate(data['tabs']):
                         if tab_ids is not None and tab_index not in tab_ids:
                             continue
-                        chat_count += 1
-                        formatted_chat = self._format_aichat_tab(tab, chat_count, image_dir)
-                        formatted_chats[f"chat_{chat_count}"] = formatted_chat
-                
+                        formatted_chat = self._format_aichat_tab(tab, chat_count + 1, image_dir)
+                        if formatted_chat.strip():  # Only include non-empty chats
+                            chat_count += 1
+                            formatted_chats[f"chat_{chat_count}"] = formatted_chat
+
                 # Handle composer data
                 elif 'allComposers' in data:
                     for composer in data['allComposers']:
-                        chat_count += 1
-                        formatted_chat = self._format_composer_chat(composer, chat_count)
-                        formatted_chats[f"chat_{chat_count}"] = formatted_chat
-            
-            logger.success("Chats formatted.")
+                        formatted_chat = self._format_composer_chat(composer, chat_count + 1)
+                        if formatted_chat.strip():  # Only include non-empty chats
+                            chat_count += 1
+                            formatted_chats[f"chat_{chat_count}"] = formatted_chat
+
+            if formatted_chats:
+                logger.success(f"Successfully formatted {len(formatted_chats)} chats.")
+            else:
+                logger.warning("No chat content found to format.")
             return formatted_chats
         except Exception as e:
             logger.error(f"Unexpected error: {e}. Full traceback: {traceback.format_exc()}")
@@ -104,27 +109,51 @@ class MarkdownChatFormatter(ChatFormatter):
     def _format_aichat_tab(self, tab: dict, index: int, image_dir: str | None) -> str:
         """Format a single AI chat tab."""
         formatted_chat = [f"# Chat Transcript - {tab.get('chatTitle', f'Chat {index}')}\n"]
-        
+
         for bubble in tab['bubbles']:
             if bubble['type'] == 'user':
                 formatted_chat.extend(self._format_user_bubble(bubble, index, image_dir))
             elif bubble['type'] == 'ai':
                 formatted_chat.extend(self._format_ai_bubble(bubble))
-        
+
         return "\n".join(formatted_chat)
 
     def _format_composer_chat(self, composer: dict, index: int) -> str:
         """Format a single composer chat."""
-        formatted_chat = [f"# Composer Chat - {composer.get('title', f'Chat {index}')}\n"]
-        
+        # Skip empty or header-only composers
+        if composer.get('type') == 'head' and not composer.get('messages'):
+            return ""
+
+        title = composer.get('name', composer.get('title', f'Chat {index}'))
+        formatted_chat = [f"# Composer Chat - {title}\n"]
+
+        # Handle different message formats
         if 'messages' in composer:
             for msg in composer['messages']:
                 if msg.get('role') == 'user':
                     formatted_chat.append(f"## User:\n\n{msg.get('content', '')}\n")
                 elif msg.get('role') == 'assistant':
                     formatted_chat.append(f"## AI ({msg.get('model', 'Unknown')}):\n\n{msg.get('content', '')}\n")
-        
+        elif 'chats' in composer:
+            for chat in composer['chats']:
+                formatted_chat.extend(self._format_chat_messages(chat))
+
+        # Return empty string if no content was added
+        if len(formatted_chat) <= 1:
+            return ""
+
         return "\n".join(formatted_chat)
+
+    def _format_chat_messages(self, chat: dict) -> list[str]:
+        """Format messages from a chat."""
+        formatted = []
+        messages = chat.get('messages', [])
+        for msg in messages:
+            if msg.get('role') == 'user':
+                formatted.append(f"## User:\n\n{msg.get('content', '')}\n")
+            elif msg.get('role') == 'assistant':
+                formatted.append(f"## AI ({msg.get('model', 'Unknown')}):\n\n{msg.get('content', '')}\n")
+        return formatted
 
     def _format_user_bubble(self, bubble: dict, index: int, image_dir: str | None) -> list[str]:
         user_text = ["## User:\n\n"]
